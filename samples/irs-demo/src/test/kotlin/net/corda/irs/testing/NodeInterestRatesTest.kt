@@ -7,10 +7,9 @@ import net.corda.contracts.asset.`owned by`
 import net.corda.core.bd
 import net.corda.core.contracts.*
 import net.corda.core.crypto.MerkleTreeException
-import net.corda.core.identity.Party
-import net.corda.core.crypto.X509Utilities
 import net.corda.core.crypto.generateKeyPair
 import net.corda.core.getOrThrow
+import net.corda.core.identity.Party
 import net.corda.core.node.services.ServiceInfo
 import net.corda.core.transactions.TransactionBuilder
 import net.corda.core.utilities.ALICE
@@ -25,6 +24,7 @@ import net.corda.testing.ALICE_PUBKEY
 import net.corda.testing.MEGA_CORP
 import net.corda.testing.MEGA_CORP_KEY
 import net.corda.testing.node.MockNetwork
+import net.corda.testing.node.MockServices
 import net.corda.testing.node.makeTestDataSourceProperties
 import org.bouncycastle.asn1.x500.X500Name
 import org.jetbrains.exposed.sql.Database
@@ -34,7 +34,6 @@ import org.junit.Before
 import org.junit.Test
 import java.io.Closeable
 import java.math.BigDecimal
-import java.time.Clock
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
@@ -52,7 +51,7 @@ class NodeInterestRatesTest {
     val DUMMY_CASH_ISSUER_KEY = generateKeyPair()
     val DUMMY_CASH_ISSUER = Party(X500Name("CN=Cash issuer,O=R3,OU=corda,L=London,C=UK"), DUMMY_CASH_ISSUER_KEY.public)
 
-    val clock = Clock.systemUTC()
+    val dummyServices = MockServices(DUMMY_CASH_ISSUER_KEY, MEGA_CORP_KEY)
     lateinit var oracle: NodeInterestRates.Oracle
     lateinit var dataSource: Closeable
     lateinit var database: Database
@@ -72,7 +71,7 @@ class NodeInterestRatesTest {
         dataSource = dataSourceAndDatabase.first
         database = dataSourceAndDatabase.second
         database.transaction {
-            oracle = NodeInterestRates.Oracle(MEGA_CORP, MEGA_CORP_KEY, clock).apply { knownFixes = TEST_DATA }
+            oracle = NodeInterestRates.Oracle(MEGA_CORP, MEGA_CORP_KEY.public, dummyServices).apply { knownFixes = TEST_DATA }
         }
     }
 
@@ -85,7 +84,7 @@ class NodeInterestRatesTest {
     fun `query successfully`() {
         database.transaction {
             val q = NodeInterestRates.parseFixOf("LIBOR 2016-03-16 1M")
-            val res = oracle.query(listOf(q), clock.instant())
+            val res = oracle.query(listOf(q), dummyServices.clock.instant())
             assertEquals(1, res.size)
             assertEquals("0.678".bd, res[0].value)
             assertEquals(q, res[0].of)
@@ -97,7 +96,7 @@ class NodeInterestRatesTest {
         database.transaction {
             val q1 = NodeInterestRates.parseFixOf("LIBOR 2016-03-16 1M")
             val q2 = NodeInterestRates.parseFixOf("LIBOR 2016-03-15 1M")
-            val e = assertFailsWith<NodeInterestRates.UnknownFix> { oracle.query(listOf(q1, q2), clock.instant()) }
+            val e = assertFailsWith<NodeInterestRates.UnknownFix> { oracle.query(listOf(q1, q2), dummyServices.clock.instant()) }
             assertEquals(e.fix, q2)
         }
     }
@@ -106,7 +105,7 @@ class NodeInterestRatesTest {
     fun `query successfully with interpolated rate`() {
         database.transaction {
             val q = NodeInterestRates.parseFixOf("LIBOR 2016-03-16 5M")
-            val res = oracle.query(listOf(q), clock.instant())
+            val res = oracle.query(listOf(q), dummyServices.clock.instant())
             assertEquals(1, res.size)
             Assert.assertEquals(0.7316228, res[0].value.toDouble(), 0.0000001)
             assertEquals(q, res[0].of)
@@ -117,14 +116,14 @@ class NodeInterestRatesTest {
     fun `rate missing and unable to interpolate`() {
         database.transaction {
             val q = NodeInterestRates.parseFixOf("EURIBOR 2016-03-15 3M")
-            assertFailsWith<NodeInterestRates.UnknownFix> { oracle.query(listOf(q), clock.instant()) }
+            assertFailsWith<NodeInterestRates.UnknownFix> { oracle.query(listOf(q), dummyServices.clock.instant()) }
         }
     }
 
     @Test
     fun `empty query`() {
         database.transaction {
-            assertFailsWith<IllegalArgumentException> { oracle.query(emptyList(), clock.instant()) }
+            assertFailsWith<IllegalArgumentException> { oracle.query(emptyList(), dummyServices.clock.instant()) }
         }
     }
 
@@ -154,7 +153,7 @@ class NodeInterestRatesTest {
     fun `sign successfully`() {
         database.transaction {
             val tx = makeTX()
-            val fix = oracle.query(listOf(NodeInterestRates.parseFixOf("LIBOR 2016-03-16 1M")), clock.instant()).first()
+            val fix = oracle.query(listOf(NodeInterestRates.parseFixOf("LIBOR 2016-03-16 1M")), dummyServices.clock.instant()).first()
             tx.addCommand(fix, oracle.identity.owningKey)
             // Sign successfully.
             val wtx = tx.toWireTransaction()
@@ -182,7 +181,7 @@ class NodeInterestRatesTest {
     fun `do not sign too many leaves`() {
         database.transaction {
             val tx = makeTX()
-            val fix = oracle.query(listOf(NodeInterestRates.parseFixOf("LIBOR 2016-03-16 1M")), clock.instant()).first()
+            val fix = oracle.query(listOf(NodeInterestRates.parseFixOf("LIBOR 2016-03-16 1M")), dummyServices.clock.instant()).first()
             fun filtering(elem: Any): Boolean {
                 return when (elem) {
                     is Command -> oracle.identity.owningKey in elem.signers && elem.value is Fix

@@ -9,12 +9,12 @@ import com.google.common.util.concurrent.SettableFuture
 import net.corda.core.RunOnCallerThread
 import net.corda.core.contracts.StateAndRef
 import net.corda.core.contracts.UniqueIdentifier
-import net.corda.core.identity.AnonymousParty
-import net.corda.core.identity.Party
 import net.corda.core.flatMap
 import net.corda.core.flows.FlowLogic
 import net.corda.core.flows.FlowStateMachine
 import net.corda.core.flows.InitiatingFlow
+import net.corda.core.identity.AnonymousParty
+import net.corda.core.identity.Party
 import net.corda.core.map
 import net.corda.core.node.services.linearHeadsOfType
 import net.corda.core.success
@@ -28,7 +28,7 @@ import net.corda.node.utilities.transaction
 import net.corda.testing.initiateSingleShotFlow
 import net.corda.testing.node.InMemoryMessagingNetwork
 import net.corda.testing.node.MockIdentityService
-import java.security.KeyPair
+import java.security.PublicKey
 import java.time.LocalDate
 import java.util.*
 
@@ -128,9 +128,9 @@ class IRSSimulation(networkSendManuallyPumped: Boolean, runAsync: Boolean, laten
         @InitiatingFlow
         class StartDealFlow(val otherParty: Party,
                             val payload: AutoOffer,
-                            val myKeyPair: KeyPair) : FlowLogic<SignedTransaction>() {
+                            val myKey: PublicKey) : FlowLogic<SignedTransaction>() {
             @Suspendable
-            override fun call(): SignedTransaction = subFlow(Instigator(otherParty, payload, myKeyPair))
+            override fun call(): SignedTransaction = subFlow(Instigator(otherParty, payload, myKey))
         }
 
         @Suppress("UNCHECKED_CAST")

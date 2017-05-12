@@ -42,11 +42,10 @@ class TradeSimulation(runAsync: Boolean, latencyInjector: InMemoryMessagingNetwo
                     Instant.now() + 10.days,
                     notary.info.notaryIdentity)
             tx.setTime(Instant.now(), 30.seconds)
-            val notaryKey = notary.services.notaryIdentityKey
-            val sellerKey = seller.services.legalIdentityKey
-            tx.signWith(notaryKey)
-            tx.signWith(sellerKey)
-            tx.toSignedTransaction(true)
+            val partySignedTx = seller.services.signInitialTransaction(tx)
+            val signedTx = notary.services.addSignature(partySignedTx, notary.services.notaryIdentityKey)
+            signedTx.verifySignatures()
+            signedTx
         }
         seller.services.recordTransactions(issuance)
 
@@ -57,13 +56,12 @@ class TradeSimulation(runAsync: Boolean, latencyInjector: InMemoryMessagingNetwo
             Buyer(it, notary.info.notaryIdentity, amount, CommercialPaper.State::class.java)
         }.flatMap { (it.stateMachine as FlowStateMachine<SignedTransaction>).resultFuture }
 
-        val sellerKey = seller.services.legalIdentityKey
         val sellerFlow = Seller(
                 buyer.info.legalIdentity,
                 notary.info,
                 issuance.tx.outRef<OwnableState>(0),
                 amount,
-                sellerKey)
+                seller.services.legalIdentityKey)
 
         showConsensusFor(listOf(buyer, seller, notary))
         showProgressFor(listOf(buyer, seller))
