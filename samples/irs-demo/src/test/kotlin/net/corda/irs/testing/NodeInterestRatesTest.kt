@@ -7,10 +7,9 @@ import net.corda.contracts.asset.`owned by`
 import net.corda.core.bd
 import net.corda.core.contracts.*
 import net.corda.core.crypto.MerkleTreeException
-import net.corda.core.identity.Party
-import net.corda.core.crypto.X509Utilities
 import net.corda.core.crypto.generateKeyPair
 import net.corda.core.getOrThrow
+import net.corda.core.identity.Party
 import net.corda.core.node.services.ServiceInfo
 import net.corda.core.transactions.TransactionBuilder
 import net.corda.core.utilities.DUMMY_NOTARY
@@ -51,7 +50,7 @@ class NodeInterestRatesTest {
     val DUMMY_CASH_ISSUER_KEY = generateKeyPair()
     val DUMMY_CASH_ISSUER = Party(X500Name("CN=Cash issuer,O=R3,OU=corda,L=London,C=UK"), DUMMY_CASH_ISSUER_KEY.public)
 
-    val clock = Clock.systemUTC()
+    val clock: Clock = Clock.systemUTC()
     lateinit var oracle: NodeInterestRates.Oracle
     lateinit var dataSource: Closeable
     lateinit var database: Database
@@ -209,8 +208,10 @@ class NodeInterestRatesTest {
         val net = MockNetwork()
         val n1 = net.createNotaryNode()
         val n2 = net.createNode(n1.info.address, advertisedServices = ServiceInfo(NodeInterestRates.type))
+        n2.registerInitiatedFlow(NodeInterestRates.FixQueryHandler::class.java)
+        n2.registerInitiatedFlow(NodeInterestRates.FixSignHandler::class.java)
         n2.database.transaction {
-            n2.findService<NodeInterestRates.Service>().oracle.knownFixes = TEST_DATA
+            n2.installCorDappService(NodeInterestRates.Oracle::class.java).knownFixes = TEST_DATA
         }
         val tx = TransactionType.General.Builder(null)
         val fixOf = NodeInterestRates.parseFixOf("LIBOR 2016-03-16 1M")
@@ -232,7 +233,8 @@ class NodeInterestRatesTest {
                             fixOf: FixOf,
                             expectedRate: BigDecimal,
                             rateTolerance: BigDecimal,
-                            progressTracker: ProgressTracker = RatesFixFlow.tracker(fixOf.name)) : RatesFixFlow(tx, oracle, fixOf, expectedRate, rateTolerance, progressTracker) {
+                            progressTracker: ProgressTracker = RatesFixFlow.tracker(fixOf.name)) 
+        : RatesFixFlow(tx, oracle, fixOf, expectedRate, rateTolerance, progressTracker) {
         override fun filtering(elem: Any): Boolean {
             return when (elem) {
                 is Command -> oracle.owningKey in elem.signers && elem.value is Fix
@@ -241,5 +243,6 @@ class NodeInterestRatesTest {
         }
     }
 
-    private fun makeTX() = TransactionType.General.Builder(DUMMY_NOTARY).withItems(1000.DOLLARS.CASH `issued by` DUMMY_CASH_ISSUER `owned by` ALICE_PUBKEY `with notary` DUMMY_NOTARY)
+    private fun makeTX() = TransactionType.General.Builder(DUMMY_NOTARY).withItems(
+        1000.DOLLARS.CASH `issued by` DUMMY_CASH_ISSUER `owned by` ALICE_PUBKEY `with notary` DUMMY_NOTARY)
 }

@@ -2,7 +2,6 @@ package net.corda.simulation
 
 import com.google.common.util.concurrent.Futures
 import com.google.common.util.concurrent.ListenableFuture
-import net.corda.core.crypto.location
 import net.corda.core.flatMap
 import net.corda.core.flows.FlowLogic
 import net.corda.core.messaging.SingleMessageRecipient
@@ -128,9 +127,11 @@ abstract class Simulation(val networkSendManuallyPumped: Boolean,
             return object : SimulatedNode(cfg, network, networkMapAddr, advertisedServices, id, overrideServices, entropyRoot) {
                 override fun start(): MockNetwork.MockNode {
                     super.start()
+                    registerInitiatedFlow(NodeInterestRates.FixQueryHandler::class.java)
+                    registerInitiatedFlow(NodeInterestRates.FixSignHandler::class.java)
                     javaClass.classLoader.getResourceAsStream("example.rates.txt").use {
                         database.transaction {
-                            findService<NodeInterestRates.Service>().upload(it)
+                            installCorDappService(NodeInterestRates.Oracle::class.java).upload(it)
                         }
                     }
                     return this
@@ -203,7 +204,7 @@ abstract class Simulation(val networkSendManuallyPumped: Boolean,
      * A place for simulations to stash human meaningful text about what the node is "thinking", which might appear
      * in the UI somewhere.
      */
-    val extraNodeLabels = Collections.synchronizedMap(HashMap<SimulatedNode, String>())
+    val extraNodeLabels: MutableMap<SimulatedNode, String> = Collections.synchronizedMap(HashMap())
 
     /**
      * Iterates the simulation by one step.

@@ -36,8 +36,8 @@ class IRSDemoTest : IntegrationTestCategory {
         driver(useTestClock = true, isDebug = true) {
             val (controller, nodeA, nodeB) = Futures.allAsList(
                     startNode(DUMMY_NOTARY.name, setOf(ServiceInfo(SimpleNotaryService.type), ServiceInfo(NodeInterestRates.type))),
-                    startNode(DUMMY_BANK_A.name, rpcUsers = listOf(rpcUser)),
-                    startNode(DUMMY_BANK_B.name)
+                    startNode(DUMMY_BANK_A.name, rpcUsers = listOf(rpcUser), advertisedServices = setOf(ServiceInfo(NodeInterestRates.type))),
+                    startNode(DUMMY_BANK_B.name, advertisedServices = setOf(ServiceInfo(NodeInterestRates.type)))
             ).getOrThrow()
 
             val (controllerAddr, nodeAAddr, nodeBAddr) = Futures.allAsList(

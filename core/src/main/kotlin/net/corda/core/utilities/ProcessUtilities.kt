@@ -1,5 +1,6 @@
 package net.corda.core.utilities
 
+import java.io.File
 import java.nio.file.Path
 
 object ProcessUtilities {
@@ -25,6 +26,8 @@ object ProcessUtilities {
     ): Process {
         val separator = System.getProperty("file.separator")
         val classpath = System.getProperty("java.class.path")
+        println("classpath:")
+        classpath.split(File.pathSeparator).forEach(::println)
         val javaPath = System.getProperty("java.home") + separator + "bin" + separator + "java"
         val debugPortArgument = if (jdwpPort != null) {
             listOf("-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=$jdwpPort")

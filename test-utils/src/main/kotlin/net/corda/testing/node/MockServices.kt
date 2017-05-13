@@ -2,7 +2,9 @@ package net.corda.testing.node
 
 import net.corda.core.contracts.Attachment
 import net.corda.core.contracts.PartyAndReference
-import net.corda.core.crypto.*
+import net.corda.core.crypto.SecureHash
+import net.corda.core.crypto.generateKeyPair
+import net.corda.core.crypto.sha256
 import net.corda.core.flows.StateMachineRunId
 import net.corda.core.identity.AnonymousParty
 import net.corda.core.identity.Party
@@ -28,7 +30,6 @@ import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.InputStream
-import java.nio.file.Path
 import java.nio.file.Paths
 import java.security.KeyPair
 import java.security.PrivateKey
@@ -73,6 +74,8 @@ open class MockServices(val key: KeyPair = generateKeyPair()) : ServiceHub {
         HibernateObserver(vaultService.rawUpdates, NodeSchemaService())
         return vaultService
     }
+
+    override fun <T : Any> cordappService(type: Class<T>): T = throw IllegalArgumentException("${type.name} not found")
 }
 
 @ThreadSafe

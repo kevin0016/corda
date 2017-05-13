@@ -1,6 +1,5 @@
 package net.corda.core.flows
 
-import java.lang.annotation.Inherited
 import kotlin.annotation.AnnotationTarget.CLASS
 
 /**
@@ -9,7 +8,8 @@ import kotlin.annotation.AnnotationTarget.CLASS
  * flow will not be allowed to start and an exception will be thrown.
  */
 @Target(CLASS)
-@Inherited
+// TODO This should be inherited but can't be so right now due to limitations in the classpath scanning.
+//@Inherited
 @MustBeDocumented
 // TODO Consider a different name, something along the lines of SchedulableFlow
 annotation class StartableByRPC

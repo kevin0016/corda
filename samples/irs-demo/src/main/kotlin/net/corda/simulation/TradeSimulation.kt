@@ -11,12 +11,16 @@ import net.corda.core.contracts.`issued by`
 import net.corda.core.days
 import net.corda.core.flatMap
 import net.corda.core.flows.FlowStateMachine
+import net.corda.core.flows.InitiatedBy
+import net.corda.core.flows.InitiatingFlow
+import net.corda.core.identity.Party
 import net.corda.core.seconds
+import net.corda.core.toFuture
 import net.corda.core.transactions.SignedTransaction
 import net.corda.flows.TwoPartyTradeFlow.Buyer
 import net.corda.flows.TwoPartyTradeFlow.Seller
-import net.corda.testing.initiateSingleShotFlow
 import net.corda.testing.node.InMemoryMessagingNetwork
+import rx.Observable
 import java.time.Instant
 
 /**
@@ -29,7 +33,7 @@ class TradeSimulation(runAsync: Boolean, latencyInjector: InMemoryMessagingNetwo
         return Futures.immediateFailedFuture(UnsupportedOperationException("This future never completes"))
     }
 
-    private fun tradeBetween(buyerBankIndex: Int, sellerBankIndex: Int): ListenableFuture<MutableList<SignedTransaction>> {
+    private fun tradeBetween(buyerBankIndex: Int, sellerBankIndex: Int): ListenableFuture<List<SignedTransaction>> {
         val buyer = banks[buyerBankIndex]
         val seller = banks[sellerBankIndex]
 
@@ -52,25 +56,38 @@ class TradeSimulation(runAsync: Boolean, latencyInjector: InMemoryMessagingNetwo
 
         val amount = 1000.DOLLARS
 
-        @Suppress("UNCHECKED_CAST")
-        val buyerFuture = buyer.initiateSingleShotFlow(Seller::class) {
-            Buyer(it, notary.info.notaryIdentity, amount, CommercialPaper.State::class.java)
-        }.flatMap { (it.stateMachine as FlowStateMachine<SignedTransaction>).resultFuture }
+        @InitiatingFlow
+        class InitiateWithSeller : Seller(
+            buyer.info.legalIdentity,
+            notary.info,
+            issuance.tx.outRef<OwnableState>(0),
+            amount,
+            seller.services.legalIdentityKey)
 
-        val sellerKey = seller.services.legalIdentityKey
+        @InitiatedBy(InitiateWithSeller::class)
+        class BuyerAcceptor(otherParty: Party) : Buyer(
+            otherParty,
+            notary.info.notaryIdentity,
+            amount,
+            CommercialPaper.State::class.java)
+
+        val buyerAcceptorFlows: Observable<BuyerAcceptor> = buyer.registerInitiatedFlow(BuyerAcceptor::class.java)
+        @Suppress("UNCHECKED_CAST")
+        val firstBuyerResult = buyerAcceptorFlows.toFuture().flatMap { (it.stateMachine as FlowStateMachine<SignedTransaction>).resultFuture }
+
         val sellerFlow = Seller(
                 buyer.info.legalIdentity,
                 notary.info,
                 issuance.tx.outRef<OwnableState>(0),
                 amount,
-                sellerKey)
+            seller.services.legalIdentityKey)
 
         showConsensusFor(listOf(buyer, seller, notary))
         showProgressFor(listOf(buyer, seller))
 
-        val sellerFuture = seller.services.startFlow(sellerFlow).resultFuture
+        val sellerResult = seller.services.startFlow(sellerFlow).resultFuture
 
-        return Futures.successfulAsList(buyerFuture, sellerFuture)
+        return Futures.successfulAsList(firstBuyerResult, sellerResult)
     }
 
 }

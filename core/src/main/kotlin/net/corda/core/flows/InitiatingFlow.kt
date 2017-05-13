@@ -5,8 +5,7 @@ import kotlin.annotation.AnnotationTarget.CLASS
 
 /**
  * This annotation is required by any [FlowLogic] which has been designated to initiate communication with a counterparty
- * and request they start their side of the flow communication. To ensure that this is correctly applied
- * [net.corda.core.node.PluginServiceHub.registerServiceFlow] checks the initiating flow class has this annotation.
+ * and request they start their side of the flow communication.
  *
  * There is also an optional [version] property, which defaults to 1, to specify the version of the flow protocol. This
  * integer value should be incremented whenever there is a release of this flow which has changes that are not backwards
@@ -19,6 +18,8 @@ import kotlin.annotation.AnnotationTarget.CLASS
  *
  * The flow version number is similar in concept to Corda's platform version but they are not the same. A flow's version
  * number can change independently of the platform version.
+ *
+ * @see InitiatedBy
  */
 // TODO Add support for multiple versions once CorDapps are loaded in separate class loaders
 @Target(CLASS)

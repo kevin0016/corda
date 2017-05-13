@@ -92,7 +92,7 @@ task deployNodes(type: net.corda.plugins.Cordform, dependsOn: ['jar']) {
     }
 }
 
-task integrationTest(type: Test, dependsOn: []) {
+task integrationTest(type: Test, dependsOn: ['jar']) {
     testClassesDir = sourceSets.integrationTest.output.classesDir
     classpath = sourceSets.integrationTest.runtimeClasspath
 }

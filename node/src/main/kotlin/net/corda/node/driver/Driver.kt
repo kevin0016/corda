@@ -493,6 +493,13 @@ class DriverDSL(
         // TODO: Derive name from the full picked name, don't just wrap the common name
         val name = providedName ?:  X509Utilities.getDevX509Name("${pickA(name).commonName}-${p2pAddress.port}")
         val baseDirectory = driverDirectory / name.commonName
+
+        val libsDir = driverDirectory.parent / "libs"
+        if (libsDir.exists()) {
+            val pluginsDir = (baseDirectory / "plugins").createDirectories()
+            libsDir.list { it.forEach { jar -> jar.copyToDirectory(pluginsDir) } }
+        }
+
         val configOverrides = mapOf(
                 "myLegalName" to name.toString(),
                 "p2pAddress" to p2pAddress.toString(),

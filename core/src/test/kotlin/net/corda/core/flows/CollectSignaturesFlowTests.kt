@@ -7,7 +7,6 @@ import net.corda.core.contracts.TransactionType
 import net.corda.core.contracts.requireThat
 import net.corda.core.getOrThrow
 import net.corda.core.identity.Party
-import net.corda.core.node.PluginServiceHub
 import net.corda.core.transactions.SignedTransaction
 import net.corda.core.utilities.unwrap
 import net.corda.flows.CollectSignaturesFlow
@@ -18,7 +17,6 @@ import net.corda.testing.node.MockNetwork
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
-import java.util.concurrent.ExecutionException
 import kotlin.test.assertFailsWith
 
 class CollectSignaturesFlowTests {
@@ -37,9 +35,9 @@ class CollectSignaturesFlowTests {
         c = nodes.partyNodes[2]
         notary = nodes.notaryNode.info.notaryIdentity
         mockNet.runNetwork()
-        CollectSigsTestCorDapp.registerFlows(a.services)
-        CollectSigsTestCorDapp.registerFlows(b.services)
-        CollectSigsTestCorDapp.registerFlows(c.services)
+        registerFlows(a)
+        registerFlows(b)
+        registerFlows(c)
     }
 
     @After
@@ -47,12 +45,10 @@ class CollectSignaturesFlowTests {
         mockNet.stopNodes()
     }
 
-    object CollectSigsTestCorDapp {
-        // Would normally be called by custom service init in a CorDapp.
-        fun registerFlows(pluginHub: PluginServiceHub) {
-            pluginHub.registerFlowInitiator(TestFlow.Initiator::class.java) { TestFlow.Responder(it) }
-            pluginHub.registerFlowInitiator(TestFlowTwo.Initiator::class.java) { TestFlowTwo.Responder(it) }
-        }
+    // Would normally be called by custom service init in a CorDapp.
+    private fun registerFlows(node: MockNetwork.MockNode) {
+        node.registerInitiatedFlow(TestFlow.Responder::class.java)
+        node.registerInitiatedFlow(TestFlowTwo.Responder::class.java)
     }
 
     // With this flow, the initiators sends an "offer" to the responder, who then initiates the collect signatures flow.
@@ -82,6 +78,7 @@ class CollectSignaturesFlowTests {
             }
         }
 
+        @InitiatedBy(TestFlow.Initiator::class)
         class Responder(val otherParty: Party) : FlowLogic<SignedTransaction>() {
             @Suspendable
             override fun call(): SignedTransaction {
@@ -104,7 +101,7 @@ class CollectSignaturesFlowTests {
     // receiving off the wire.
     object TestFlowTwo {
         @InitiatingFlow
-        class Initiator(val state: DummyContract.MultiOwnerState, val otherParty: Party) : FlowLogic<SignedTransaction>() {
+        class Initiator(val state: DummyContract.MultiOwnerState) : FlowLogic<SignedTransaction>() {
             @Suspendable
             override fun call(): SignedTransaction {
                 val notary = serviceHub.networkMapCache.notaryNodes.single().notaryIdentity
@@ -118,6 +115,7 @@ class CollectSignaturesFlowTests {
             }
         }
 
+        @InitiatedBy(TestFlowTwo.Initiator::class)
         class Responder(val otherParty: Party) : FlowLogic<SignedTransaction>() {
             @Suspendable override fun call(): SignedTransaction {
                 val flow = object : SignTransactionFlow(otherParty) {
@@ -137,13 +135,12 @@ class CollectSignaturesFlowTests {
         }
     }
 
-
     @Test
     fun `successfully collects two signatures`() {
         val magicNumber = 1337
         val parties = listOf(a.info.legalIdentity, b.info.legalIdentity, c.info.legalIdentity)
         val state = DummyContract.MultiOwnerState(magicNumber, parties.map { it.owningKey })
-        val flow = a.services.startFlow(TestFlowTwo.Initiator(state, b.info.legalIdentity))
+        val flow = a.services.startFlow(TestFlowTwo.Initiator(state))
         mockNet.runNetwork()
         val result = flow.resultFuture.getOrThrow()
         result.verifySignatures()
@@ -169,8 +166,8 @@ class CollectSignaturesFlowTests {
         val ptx = onePartyDummyContract.signWith(MINI_CORP_KEY).toSignedTransaction(false)
         val flow = a.services.startFlow(CollectSignaturesFlow(ptx))
         mockNet.runNetwork()
-        assertFailsWith<ExecutionException>("The Initiator of CollectSignaturesFlow must have signed the transaction.") {
-            flow.resultFuture.get()
+        assertFailsWith<IllegalArgumentException>("The Initiator of CollectSignaturesFlow must have signed the transaction.") {
+            flow.resultFuture.getOrThrow()
         }
     }
 

@@ -5,6 +5,7 @@ import com.google.common.util.concurrent.ListenableFuture
 import net.corda.core.flows.FlowInitiator
 import net.corda.core.flows.FlowLogic
 import net.corda.core.flows.FlowStateMachine
+import net.corda.core.identity.Party
 import net.corda.core.messaging.SingleMessageRecipient
 import net.corda.core.node.NodeInfo
 import net.corda.core.node.PluginServiceHub
@@ -13,7 +14,7 @@ import net.corda.core.node.services.TxWritableStorageService
 import net.corda.core.serialization.CordaSerializable
 import net.corda.core.transactions.SignedTransaction
 import net.corda.core.utilities.loggerFor
-import net.corda.node.internal.ServiceFlowInfo
+import net.corda.node.internal.InitiatedFlowInfo
 import net.corda.node.services.messaging.MessagingService
 import net.corda.node.services.statemachine.FlowLogicRefFactoryImpl
 import net.corda.node.services.statemachine.FlowStateMachineImpl
@@ -93,7 +94,6 @@ abstract class ServiceHubInternal : PluginServiceHub {
      * Starts an already constructed flow. Note that you must be on the server thread to call this method. [FlowInitiator]
      * defaults to [FlowInitiator.RPC] with username "Only For Testing".
      */
-    // TODO Move it to test utils.
     @VisibleForTesting
     fun <T> startFlow(logic: FlowLogic<T>): FlowStateMachine<T> = startFlow(logic, FlowInitiator.RPC("Only For Testing"))
 
@@ -102,7 +102,6 @@ abstract class ServiceHubInternal : PluginServiceHub {
      * @param flowInitiator indicates who started the flow, see: [FlowInitiator].
      */
     abstract fun <T> startFlow(logic: FlowLogic<T>, flowInitiator: FlowInitiator): FlowStateMachineImpl<T>
-
 
     /**
      * Will check [logicType] and [args] against a whitelist and if acceptable then construct and initiate the flow.
@@ -122,5 +121,8 @@ abstract class ServiceHubInternal : PluginServiceHub {
         return startFlow(logic, flowInitiator)
     }
 
-    abstract fun getServiceFlowFactory(clientFlowClass: Class<out FlowLogic<*>>): ServiceFlowInfo?
+    abstract fun getFlowFactory(initiatingFlowClass: Class<out FlowLogic<*>>): InitiatedFlowInfo?
+
+    @Suppress("OverridingDeprecatedMember")
+    override fun registerFlowInitiator(initiatingFlowClass: Class<out FlowLogic<*>>, serviceFlowFactory: (Party) -> FlowLogic<*>) = Unit
 }

@@ -5,15 +5,16 @@ import net.corda.core.RetryableException
 import net.corda.core.contracts.*
 import net.corda.core.crypto.DigitalSignature
 import net.corda.core.crypto.MerkleTreeException
-import net.corda.core.identity.Party
 import net.corda.core.crypto.keys
 import net.corda.core.crypto.sign
 import net.corda.core.flows.FlowLogic
+import net.corda.core.flows.InitiatedBy
+import net.corda.core.identity.Party
 import net.corda.core.math.CubicSplineInterpolator
 import net.corda.core.math.Interpolator
 import net.corda.core.math.InterpolatorFactory
-import net.corda.core.node.CordaPluginRegistry
 import net.corda.core.node.PluginServiceHub
+import net.corda.core.node.services.CorDappService
 import net.corda.core.node.services.ServiceType
 import net.corda.core.serialization.SingletonSerializeAsToken
 import net.corda.core.transactions.FilteredTransaction
@@ -34,7 +35,6 @@ import java.time.Clock
 import java.time.Instant
 import java.time.LocalDate
 import java.util.*
-import java.util.function.Function
 import javax.annotation.concurrent.ThreadSafe
 import kotlin.collections.component1
 import kotlin.collections.component2
@@ -52,75 +52,33 @@ import kotlin.collections.set
 object NodeInterestRates {
     val type = ServiceType.corda.getSubType("interest_rates")
 
-    /**
-     * Register the flow that is used with the Fixing integration tests.
-     */
-    class Plugin : CordaPluginRegistry() {
-        override val servicePlugins = listOf(Function(::Service))
-    }
-
-    /**
-     * The Service that wraps [Oracle] and handles messages/network interaction/request scrubbing.
-     */
     // DOCSTART 2
-    class Service(val services: PluginServiceHub) : AcceptsFileUpload, SingletonSerializeAsToken() {
-        val oracle: Oracle by lazy {
-            val myNodeInfo = services.myInfo
-            val myIdentity = myNodeInfo.serviceIdentities(type).first()
-            val mySigningKey = services.keyManagementService.toKeyPair(myIdentity.owningKey.keys)
-            Oracle(myIdentity, mySigningKey, services.clock)
-        }
-
-        init {
-            // Note: access to the singleton oracle property is via the registered SingletonSerializeAsToken Service.
-            // Otherwise the Kryo serialisation of the call stack in the Quasar Fiber extends to include
-            // the framework Oracle and the flow will crash.
-            services.registerServiceFlow(RatesFixFlow.FixSignFlow::class.java) { FixSignHandler(it, this) }
-            services.registerServiceFlow(RatesFixFlow.FixQueryFlow::class.java) { FixQueryHandler(it, this) }
-        }
-
-        private class FixSignHandler(val otherParty: Party, val service: Service) : FlowLogic<Unit>() {
-            @Suspendable
-            override fun call() {
-                val request = receive<RatesFixFlow.SignRequest>(otherParty).unwrap { it }
-                send(otherParty, service.oracle.sign(request.ftx))
-            }
-        }
-
-        private class FixQueryHandler(val otherParty: Party, val service: Service) : FlowLogic<Unit>() {
-            companion object {
-                object RECEIVED : ProgressTracker.Step("Received fix request")
-                object SENDING : ProgressTracker.Step("Sending fix response")
-            }
-
-            override val progressTracker = ProgressTracker(RECEIVED, SENDING)
-
-            init {
-                progressTracker.currentStep = RECEIVED
-            }
-
-            @Suspendable
-            override fun call(): Unit {
-                val request = receive<RatesFixFlow.QueryRequest>(otherParty).unwrap { it }
-                val answers = service.oracle.query(request.queries, request.deadline)
-                progressTracker.currentStep = SENDING
-                send(otherParty, answers)
-            }
-        }
-        // DOCEND 2
-
-        // File upload support
-        override val dataTypePrefix = "interest-rates"
-        override val acceptableFileExtensions = listOf(".rates", ".txt")
-
-        override fun upload(file: InputStream): String {
-            val fixes = parseFile(file.bufferedReader().readText())
-            oracle.knownFixes = fixes
-            val msg = "Interest rates oracle accepted ${fixes.size} new interest rate fixes"
-            println(msg)
-            return msg
+    @InitiatedBy(RatesFixFlow.FixSignFlow::class)
+    class FixSignHandler(val otherParty: Party) : FlowLogic<Unit>() {
+        @Suspendable
+        override fun call() {
+            val request = receive<RatesFixFlow.SignRequest>(otherParty).unwrap { it }
+            send(otherParty, serviceHub.cordappService(Oracle::class.java).sign(request.ftx))
         }
     }
+
+    @InitiatedBy(RatesFixFlow.FixQueryFlow::class)
+    class FixQueryHandler(val otherParty: Party) : FlowLogic<Unit>() {
+        object RECEIVED : ProgressTracker.Step("Received fix request")
+        object SENDING : ProgressTracker.Step("Sending fix response")
+
+        override val progressTracker = ProgressTracker(RECEIVED, SENDING)
+
+        @Suspendable
+        override fun call(): Unit {
+            val request = receive<RatesFixFlow.QueryRequest>(otherParty).unwrap { it }
+            progressTracker.currentStep = RECEIVED
+            val answers = serviceHub.cordappService(Oracle::class.java).query(request.queries, request.deadline)
+            progressTracker.currentStep = SENDING
+            send(otherParty, answers)
+        }
+    }
+    // DOCEND 2
 
     /**
      * An implementation of an interest rate fix oracle which is given data in a simple string format.
@@ -128,7 +86,14 @@ object NodeInterestRates {
      * The oracle will try to interpolate the missing value of a tenor for the given fix name and date.
      */
     @ThreadSafe
-    class Oracle(val identity: Party, private val signingKey: KeyPair, val clock: Clock) {
+    @CorDappService
+    class Oracle(val identity: Party, private val signingKey: KeyPair, val clock: Clock) : AcceptsFileUpload, SingletonSerializeAsToken() {
+        constructor(services: PluginServiceHub) : this(
+            services.myInfo.serviceIdentities(type).first(),
+            services.keyManagementService.toKeyPair(services.myInfo.serviceIdentities(type).first().owningKey.keys),
+            services.clock
+        )
+
         private object Table : JDBCHashedTable("demo_interest_rate_fixes") {
             val name = varchar("index_name", length = 255)
             val forDay = localDate("for_day")
@@ -226,6 +191,18 @@ object NodeInterestRates {
             // an invalid transaction the signature is worthless.
             return signingKey.sign(ftx.rootHash.bytes, identity)
         }
+
+        // File upload support
+        override val dataTypePrefix = "interest-rates"
+        override val acceptableFileExtensions = listOf(".rates", ".txt")
+
+        override fun upload(file: InputStream): String {
+            val fixes = parseFile(file.bufferedReader().readText())
+            knownFixes = fixes
+            val msg = "Interest rates oracle accepted ${fixes.size} new interest rate fixes"
+            println(msg)
+            return msg
+        }
         // DOCEND 1
     }
 
@@ -245,10 +222,9 @@ object NodeInterestRates {
 
         private fun buildContainer(fixes: Set<Fix>): Map<Pair<String, LocalDate>, InterpolatingRateMap> {
             val tempContainer = HashMap<Pair<String, LocalDate>, HashMap<Tenor, BigDecimal>>()
-            for (fix in fixes) {
-                val fixOf = fix.of
+            for ((fixOf, value) in fixes) {
                 val rates = tempContainer.getOrPut(fixOf.name to fixOf.forDay) { HashMap<Tenor, BigDecimal>() }
-                rates[fixOf.ofTenor] = fix.value
+                rates[fixOf.ofTenor] = value
             }
 
             // TODO: the calendar data needs to be specified for every fix type in the input string
