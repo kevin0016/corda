@@ -18,6 +18,17 @@ interface IdentityService {
     fun registerIdentity(party: Party)
 
     /**
+     * Create a new key pair and X.509 certificate for a transaction identity, then build the certificate path to that
+     * certificate and return it.
+     *
+     * @param party the identity to build a certificate for. The node must have a certificate for this identity, and
+     * access to its signing key.
+     * @throws IllegalArgumentException if the certificate or signing key for the identity is not available.
+     */
+    @Throws(IllegalArgumentException::class)
+    fun createTransactionIdentity(party: Party, revocationEnabled: Boolean): CertPath
+
+    /**
      * Verify and then store the certificates proving that an anonymous party's key is owned by the given full
      * party.
      *

@@ -62,6 +62,11 @@ class InMemoryIdentityService : SingletonSerializeAsToken(), IdentityService {
 
     override fun pathForAnonymous(anonymousParty: AnonymousParty): CertPath? = partyToPath[anonymousParty]
 
+    @Throws(IllegalArgumentException::class)
+    override fun createTransactionIdentity(party: Party, revocationEnabled: Boolean): CertPath {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
     @Throws(CertificateExpiredException::class, CertificateNotYetValidException::class, InvalidAlgorithmParameterException::class)
     override fun registerPath(trustedRoot: X509Certificate, anonymousParty: AnonymousParty, path: CertPath) {
         val expectedTrustAnchor = TrustAnchor(trustedRoot, null)

@@ -5,6 +5,7 @@ import net.corda.core.identity.Party
 import net.corda.core.utilities.ProgressTracker
 import net.corda.flows.TxKeyFlowUtilities
 import java.security.PublicKey
+import java.security.cert.CertPath
 import java.security.cert.Certificate
 
 /**
@@ -16,7 +17,7 @@ object TxKeyFlow {
 
     @InitiatingFlow
     class Requester(val otherSide: Party,
-                    override val progressTracker: ProgressTracker) : FlowLogic<Pair<PublicKey, Certificate?>>() {
+                    override val progressTracker: ProgressTracker) : FlowLogic<CertPath>() {
         constructor(otherSide: Party) : this(otherSide, tracker())
 
         companion object {
@@ -26,7 +27,7 @@ object TxKeyFlow {
         }
 
         @Suspendable
-        override fun call(): Pair<PublicKey, Certificate?> {
+        override fun call(): CertPath {
             progressTracker.currentStep = AWAITING_KEY
             return TxKeyFlowUtilities.receiveKey(this, otherSide)
         }
@@ -37,8 +38,9 @@ object TxKeyFlow {
      * counterparty and as the result from the flow.
      */
     class Provider(val otherSide: Party,
-                   override val progressTracker: ProgressTracker) : FlowLogic<PublicKey>() {
-        constructor(otherSide: Party) : this(otherSide, tracker())
+                   val revocationEnabled: Boolean,
+                   override val progressTracker: ProgressTracker) : FlowLogic<CertPath>() {
+        constructor(otherSide: Party, revocationEnabled: Boolean) : this(otherSide, revocationEnabled, tracker())
 
         companion object {
             object SENDING_KEY : ProgressTracker.Step("Sending key")
@@ -47,9 +49,9 @@ object TxKeyFlow {
         }
 
         @Suspendable
-        override fun call(): PublicKey {
+        override fun call(): CertPath {
             progressTracker.currentStep = SENDING_KEY
-            return TxKeyFlowUtilities.provideKey(this, otherSide)
+            return TxKeyFlowUtilities.provideKey(this, otherSide, revocationEnabled)
         }
     }
 }

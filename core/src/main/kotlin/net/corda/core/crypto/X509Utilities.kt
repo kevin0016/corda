@@ -126,10 +126,24 @@ object X509Utilities {
     @JvmStatic
     fun createIntermediateCert(subject: X500Name, ca: CertificateAndKey, signatureScheme: SignatureScheme = DEFAULT_TLS_SIGNATURE_SCHEME, validityWindow: Pair<Int, Int> = DEFAULT_VALIDITY_WINDOW): CertificateAndKey {
         val keyPair = generateKeyPair(signatureScheme)
+        val cert = createIntermediateCert(subject, ca, keyPair.public, validityWindow)
+        return CertificateAndKey(cert, keyPair)
+    }
+
+    /**
+     * Create a de novo root intermediate X509 v3 CA cert and KeyPair.
+     * @param subject subject of the generated certificate.
+     * @param ca The Public certificate and KeyPair of the root CA certificate above this used to sign it
+     * @param signatureScheme The signature scheme which will be used to generate keys and certificate. Default to [DEFAULT_TLS_SIGNATURE_SCHEME] if not provided.
+     * @param validityWindow The certificate's validity window. Default to [DEFAULT_VALIDITY_WINDOW] if not provided.
+     * @return new intermediate CA Cert. Note the generated certificate tree is capped at max depth of 1 below this to
+     * be in line with commercially available certificates
+     */
+    @JvmStatic
+    fun createIntermediateCert(subject: X500Name, ca: CertificateAndKey, publicKey: PublicKey, validityWindow: Pair<Int, Int> = DEFAULT_VALIDITY_WINDOW): X509Certificate {
         val issuer = X509CertificateHolder(ca.certificate.encoded).subject
         val window = getCertificateValidityWindow(validityWindow.first, validityWindow.second, ca.certificate.notBefore, ca.certificate.notAfter)
-        val cert = Crypto.createCertificate(issuer, ca.keyPair, subject, keyPair.public, CA_KEY_USAGE, CA_KEY_PURPOSES, window, pathLength = 1)
-        return CertificateAndKey(cert, keyPair)
+        return Crypto.createCertificate(issuer, ca.keyPair, subject, publicKey, CA_KEY_USAGE, CA_KEY_PURPOSES, window, pathLength = 1)
     }
 
     /**
@@ -169,15 +183,15 @@ object X509Utilities {
      * @param revocationEnabled whether revocation of certificates in the path should be checked.
      */
     fun createCertificatePath(rootCertAndKey: CertificateAndKey,
-                              targetCertAndKey: CertificateAndKey,
+                              targetCertificate: X509Certificate,
                               revocationEnabled: Boolean): CertPathBuilderResult {
-        val intermediateCertificates = setOf(targetCertAndKey.certificate)
+        val intermediateCertificates = setOf(targetCertificate)
         val certStore = CertStore.getInstance("Collection", CollectionCertStoreParameters(intermediateCertificates))
         val certPathFactory = CertPathBuilder.getInstance("PKIX")
         val trustAnchor = TrustAnchor(rootCertAndKey.certificate, null)
         val certPathParameters = try {
             PKIXBuilderParameters(setOf(trustAnchor), X509CertSelector().apply {
-                certificate = targetCertAndKey.certificate
+                certificate = targetCertificate
             })
         } catch (ex: InvalidAlgorithmParameterException) {
             throw RuntimeException(ex)
