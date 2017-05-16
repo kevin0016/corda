@@ -26,6 +26,6 @@ class NonValidatingNotaryFlow(otherSide: Party,
             it.verify()
             it
         }
-        return TransactionParts(ftx.rootHash, ftx.filteredLeaves.inputs, ftx.filteredLeaves.timestamp)
+        return TransactionParts(ftx.rootHash, ftx.filteredLeaves.inputs, ftx.filteredLeaves.timeRange)
     }
 }

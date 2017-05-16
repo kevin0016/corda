@@ -43,7 +43,7 @@ class PartialMerkleTreeTest {
             input("MEGA_CORP cash")
             output("MEGA_CORP cash".output<Cash.State>().copy(owner = MINI_CORP))
             command(MEGA_CORP_PUBKEY) { Cash.Commands.Move() }
-            timestamp(TEST_TX_TIME)
+            timeRange(TEST_TX_TIME)
             this.verifies()
         }
     }
@@ -98,7 +98,7 @@ class PartialMerkleTreeTest {
                 is StateRef -> true
                 is TransactionState<*> -> elem.data.participants[0].owningKey.keys == MINI_CORP_PUBKEY.keys
                 is Command -> MEGA_CORP_PUBKEY in elem.signers
-                is Timestamp -> true
+                is TimeRange -> true
                 is PublicKey -> elem == MEGA_CORP_PUBKEY
                 else -> false
             }
@@ -113,7 +113,7 @@ class PartialMerkleTreeTest {
         assertEquals(1, leaves.inputs.size)
         assertEquals(1, leaves.mustSign.size)
         assertEquals(0, leaves.attachments.size)
-        assertTrue(mt.filteredLeaves.timestamp != null)
+        assertTrue(mt.filteredLeaves.timeRange != null)
         assertEquals(null, mt.filteredLeaves.type)
         assertEquals(null, mt.filteredLeaves.notary)
         assertTrue(mt.verify())
@@ -133,7 +133,7 @@ class PartialMerkleTreeTest {
         assertTrue(mt.filteredLeaves.commands.isEmpty())
         assertTrue(mt.filteredLeaves.inputs.isEmpty())
         assertTrue(mt.filteredLeaves.outputs.isEmpty())
-        assertTrue(mt.filteredLeaves.timestamp == null)
+        assertTrue(mt.filteredLeaves.timeRange == null)
         assertFailsWith<MerkleTreeException> { mt.verify() }
     }
 
@@ -219,7 +219,7 @@ class PartialMerkleTreeTest {
         }
     }
 
-    private fun makeSimpleCashWtx(notary: Party, timestamp: Timestamp? = null, attachments: List<SecureHash> = emptyList()): WireTransaction {
+    private fun makeSimpleCashWtx(notary: Party, timestamp: TimeRange? = null, attachments: List<SecureHash> = emptyList()): WireTransaction {
         return WireTransaction(
                 inputs = testTx.inputs,
                 attachments = attachments,

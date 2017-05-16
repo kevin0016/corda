@@ -24,7 +24,7 @@ data class PortfolioSwap(override val legalContractReference: SecureHash = Secur
                                 outputs: List<ContractState>,
                                 commands: List<AuthenticatedObject<Commands>>,
                                 groupingKey: Unit?): Set<Commands> {
-                require(tx.timestamp?.midpoint != null) { "must be timestamped" }
+                require(tx.timeRange?.midpoint != null) { "must  have a time-range (validation window)" }
                 // We return an empty set because we don't process any commands
                 return emptySet()
             }

@@ -31,7 +31,7 @@ class WireTransaction(
         notary: Party?,
         signers: List<PublicKey>,
         type: TransactionType,
-        timestamp: Timestamp?
+        timestamp: TimeRange?
 ) : BaseTransaction(inputs, outputs, notary, signers, type, timestamp), TraversableTransaction {
     init {
         checkInvariants()
@@ -100,7 +100,7 @@ class WireTransaction(
         val resolvedInputs = inputs.map { ref ->
             resolveStateRef(ref)?.let { StateAndRef(it, ref) } ?: throw TransactionResolutionException(ref.txhash)
         }
-        return LedgerTransaction(resolvedInputs, outputs, authenticatedArgs, attachments, id, notary, mustSign, timestamp, type)
+        return LedgerTransaction(resolvedInputs, outputs, authenticatedArgs, attachments, id, notary, mustSign, timeRange, type)
     }
 
     /**
@@ -130,7 +130,7 @@ class WireTransaction(
                 notNullFalse(notary) as Party?,
                 mustSign.filter { filtering(it) },
                 notNullFalse(type) as TransactionType?,
-                notNullFalse(timestamp) as Timestamp?
+                notNullFalse(timeRange) as TimeRange?
         )
     }
 

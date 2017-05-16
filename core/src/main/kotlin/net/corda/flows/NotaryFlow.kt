@@ -2,7 +2,7 @@ package net.corda.flows
 
 import co.paralleluniverse.fibers.Suspendable
 import net.corda.core.contracts.StateRef
-import net.corda.core.contracts.Timestamp
+import net.corda.core.contracts.TimeRange
 import net.corda.core.crypto.*
 import net.corda.core.flows.FlowException
 import net.corda.core.flows.FlowLogic
@@ -20,13 +20,13 @@ import net.corda.core.utilities.unwrap
 object NotaryFlow {
     /**
      * A flow to be used by a party for obtaining signature(s) from a [NotaryService] ascertaining the transaction
-     * timestamp is correct and none of its inputs have been used in another completed transaction.
+     * timeRange is correct and none of its inputs have been used in another completed transaction.
      *
      * In case of a single-node or Raft notary, the flow will return a single signature. For the BFT notary multiple
      * signatures will be returned – one from each replica that accepted the input state commit.
      *
      * @throws NotaryException in case the any of the inputs to the transaction have been consumed
-     *                         by another transaction or the timestamp is invalid.
+     *                         by another transaction or the timeRange is invalid.
      */
     @InitiatingFlow
     open class Client(private val stx: SignedTransaction,
@@ -60,7 +60,7 @@ object NotaryFlow {
             val payload: Any = if (serviceHub.networkMapCache.isValidatingNotary(notaryParty)) {
                 stx
             } else {
-                wtx.buildFilteredTransaction { it is StateRef || it is Timestamp }
+                wtx.buildFilteredTransaction { it is StateRef || it is TimeRange }
             }
 
             val response = try {
@@ -87,7 +87,7 @@ object NotaryFlow {
     /**
      * A flow run by a notary service that handles notarisation requests.
      *
-     * It checks that the timestamp command is valid (if present) and commits the input state, or returns a conflict
+     * It checks that the timeRange command is valid (if present) and commits the input state, or returns a conflict
      * if any of the input states have been previously committed.
      *
      * Additional transaction validation logic can be added when implementing [receiveAndVerifyTx].
@@ -118,7 +118,7 @@ object NotaryFlow {
             send(otherSide, listOf(signature))
         }
 
-        private fun validateTimestamp(t: Timestamp?) {
+        private fun validateTimestamp(t: TimeRange?) {
             if (t != null && !timestampChecker.isValid(t))
                 throw NotaryException(NotaryError.TimestampInvalid)
         }
@@ -160,7 +160,7 @@ object NotaryFlow {
  * The minimum amount of information needed to notarise a transaction. Note that this does not include
  * any sensitive transaction details.
  */
-data class TransactionParts(val id: SecureHash, val inputs: List<StateRef>, val timestamp: Timestamp?)
+data class TransactionParts(val id: SecureHash, val inputs: List<StateRef>, val timestamp: TimeRange?)
 
 class NotaryException(val error: NotaryError) : FlowException("Error response from Notary - $error")
 
@@ -170,7 +170,7 @@ sealed class NotaryError {
         override fun toString() = "One or more input states for transaction $txId have been used in another transaction"
     }
 
-    /** Thrown if the time specified in the timestamp command is outside the allowed tolerance */
+    /** Thrown if the time specified in the timeRange command is outside the allowed tolerance. */
     object TimestampInvalid : NotaryError()
 
     data class TransactionInvalid(val msg: String) : NotaryError()

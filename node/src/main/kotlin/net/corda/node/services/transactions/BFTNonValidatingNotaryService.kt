@@ -19,7 +19,7 @@ import kotlin.concurrent.thread
 /**
  * A non-validating notary service operated by a group of parties that don't necessarily trust each other.
  *
- * A transaction is notarised when the consensus is reached by the cluster on its uniqueness, and timestamp validity.
+ * A transaction is notarised when the consensus is reached by the cluster on its uniqueness, and timeRange validity.
  */
 class BFTNonValidatingNotaryService(services: ServiceHubInternal,
                                     timestampChecker: TimestampChecker,
@@ -80,7 +80,7 @@ class BFTNonValidatingNotaryService(services: ServiceHubInternal,
                 val id = ftx.rootHash
                 val inputs = ftx.filteredLeaves.inputs
 
-                validateTimestamp(ftx.filteredLeaves.timestamp)
+                validateTimestamp(ftx.filteredLeaves.timeRange)
                 commitInputStates(inputs, id, callerIdentity)
 
                 log.debug { "Inputs committed successfully, signing $id" }

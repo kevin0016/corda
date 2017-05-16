@@ -32,7 +32,7 @@ class ValidatingNotaryFlow(otherSide: Party,
         checkSignatures(stx)
         val wtx = stx.tx
         validateTransaction(wtx)
-        return TransactionParts(wtx.id, wtx.inputs, wtx.timestamp)
+        return TransactionParts(wtx.id, wtx.inputs, wtx.timeRange)
     }
 
     private fun checkSignatures(stx: SignedTransaction) {

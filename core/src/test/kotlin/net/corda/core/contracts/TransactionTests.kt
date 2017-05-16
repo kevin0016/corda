@@ -101,7 +101,7 @@ class TransactionTests {
         val attachments = emptyList<Attachment>()
         val id = SecureHash.randomSHA256()
         val signers = listOf(DUMMY_NOTARY_KEY.public)
-        val timestamp: Timestamp? = null
+        val timestamp: TimeRange? = null
         val transaction: LedgerTransaction = LedgerTransaction(
                 inputs,
                 outputs,
@@ -128,7 +128,7 @@ class TransactionTests {
         val attachments = emptyList<Attachment>()
         val id = SecureHash.randomSHA256()
         val signers = listOf(DUMMY_NOTARY_KEY.public)
-        val timestamp: Timestamp? = null
+        val timestamp: TimeRange? = null
         val transaction: LedgerTransaction = LedgerTransaction(
                 inputs,
                 outputs,
@@ -155,7 +155,7 @@ class TransactionTests {
         val attachments = emptyList<Attachment>()
         val id = SecureHash.randomSHA256()
         val signers = listOf(DUMMY_NOTARY_KEY.public)
-        val timestamp: Timestamp? = null
+        val timestamp: TimeRange? = null
         val transaction: LedgerTransaction = LedgerTransaction(
                 inputs,
                 outputs,

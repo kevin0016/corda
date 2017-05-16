@@ -81,7 +81,7 @@ data class TradeApprovalContract(override val legalContractReference: SecureHash
      */
     override fun verify(tx: TransactionForContract) {
         val command = tx.commands.requireSingleCommand<TradeApprovalContract.Commands>()
-        require(tx.timestamp?.midpoint != null) { "must be timestamped" }
+        require(tx.timeRange?.midpoint != null) { "must have a time-range (validation window)" }
         when (command.value) {
             is Commands.Issue -> {
                 requireThat {

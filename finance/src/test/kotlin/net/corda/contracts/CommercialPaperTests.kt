@@ -97,7 +97,7 @@ class CommercialPaperTestsGeneric {
             transaction("Issuance") {
                 output("paper") { thisTest.getPaper() }
                 command(MEGA_CORP_PUBKEY) { thisTest.getIssueCommand(DUMMY_NOTARY) }
-                timestamp(TEST_TX_TIME)
+                timeRange(TEST_TX_TIME)
                 this.verifies()
             }
 
@@ -129,17 +129,17 @@ class CommercialPaperTestsGeneric {
 
                 tweak {
                     outputs(700.DOLLARS `issued by` issuer)
-                    timestamp(TEST_TX_TIME + 8.days)
+                    timeRange(TEST_TX_TIME + 8.days)
                     this `fails with` "received amount equals the face value"
                 }
                 outputs(1000.DOLLARS `issued by` issuer)
 
 
                 tweak {
-                    timestamp(TEST_TX_TIME + 2.days)
+                    timeRange(TEST_TX_TIME + 2.days)
                     this `fails with` "must have matured"
                 }
-                timestamp(TEST_TX_TIME + 8.days)
+                timeRange(TEST_TX_TIME + 8.days)
 
                 tweak {
                     output { "paper".output<ICommercialPaperState>() }
@@ -156,7 +156,7 @@ class CommercialPaperTestsGeneric {
         transaction {
             output { thisTest.getPaper() }
             command(DUMMY_PUBKEY_1) { thisTest.getIssueCommand(DUMMY_NOTARY) }
-            timestamp(TEST_TX_TIME)
+            timeRange(TEST_TX_TIME)
             this `fails with` "output states are issued by a command signer"
         }
     }
@@ -166,7 +166,7 @@ class CommercialPaperTestsGeneric {
         transaction {
             output { thisTest.getPaper().withFaceValue(0.DOLLARS `issued by` issuer) }
             command(MEGA_CORP_PUBKEY) { thisTest.getIssueCommand(DUMMY_NOTARY) }
-            timestamp(TEST_TX_TIME)
+            timeRange(TEST_TX_TIME)
             this `fails with` "output values sum to more than the inputs"
         }
     }
@@ -176,7 +176,7 @@ class CommercialPaperTestsGeneric {
         transaction {
             output { thisTest.getPaper().withMaturityDate(TEST_TX_TIME - 10.days) }
             command(MEGA_CORP_PUBKEY) { thisTest.getIssueCommand(DUMMY_NOTARY) }
-            timestamp(TEST_TX_TIME)
+            timeRange(TEST_TX_TIME)
             this `fails with` "maturity date is not in the past"
         }
     }
@@ -187,7 +187,7 @@ class CommercialPaperTestsGeneric {
             input(thisTest.getPaper())
             output { thisTest.getPaper() }
             command(MEGA_CORP_PUBKEY) { thisTest.getIssueCommand(DUMMY_NOTARY) }
-            timestamp(TEST_TX_TIME)
+            timeRange(TEST_TX_TIME)
             this `fails with` "output values sum to more than the inputs"
         }
     }

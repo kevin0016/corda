@@ -118,9 +118,9 @@ class DurationGenerator : Generator<Duration>(Duration::class.java) {
     }
 }
 
-class TimestampGenerator : Generator<Timestamp>(Timestamp::class.java) {
-    override fun generate(random: SourceOfRandomness, status: GenerationStatus): Timestamp {
-        return Timestamp(InstantGenerator().generate(random, status), DurationGenerator().generate(random, status))
+class TimeRangeGenerator : Generator<TimeRange>(TimeRange::class.java) {
+    override fun generate(random: SourceOfRandomness, status: GenerationStatus): TimeRange {
+        return TimeRange(InstantGenerator().generate(random, status), DurationGenerator().generate(random, status))
     }
 }
 

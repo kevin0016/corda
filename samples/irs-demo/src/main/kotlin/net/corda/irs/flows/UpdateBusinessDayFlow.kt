@@ -66,7 +66,7 @@ object UpdateBusinessDayFlow {
         /**
          * Returns recipients ordered by legal name, with notary nodes taking priority over party nodes.
          * Ordering is required so that we avoid situations where on clock update a party starts a scheduled flow, but
-         * the notary or counterparty still use the old clock, so the timestamp on the transaction does not validate.
+         * the notary or counterparty still use the old clock, so the timeRange on the transaction does not validate.
          */
         private fun getRecipients(): Iterable<NodeInfo> {
             val notaryNodes = serviceHub.networkMapCache.notaryNodes

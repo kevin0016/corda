@@ -112,6 +112,6 @@ class TransactionSerializationTests {
         tx.signWith(MEGA_CORP_KEY)
         tx.signWith(DUMMY_NOTARY_KEY)
         val stx = tx.toSignedTransaction()
-        assertEquals(TEST_TX_TIME, stx.tx.timestamp?.midpoint)
+        assertEquals(TEST_TX_TIME, stx.tx.timeRange?.midpoint)
     }
 }

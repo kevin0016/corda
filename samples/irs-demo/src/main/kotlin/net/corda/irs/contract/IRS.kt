@@ -6,7 +6,6 @@ import net.corda.core.crypto.SecureHash
 import net.corda.core.crypto.containsAny
 import net.corda.core.flows.FlowLogicRefFactory
 import net.corda.core.identity.AbstractParty
-import net.corda.core.identity.AnonymousParty
 import net.corda.core.identity.Party
 import net.corda.core.node.services.ServiceType
 import net.corda.core.serialization.CordaSerializable
@@ -521,7 +520,7 @@ class InterestRateSwap : Contract {
                                 outputs: List<ContractState>,
                                 commands: List<AuthenticatedObject<Commands>>,
                                 groupingKey: Unit?): Set<Commands> {
-                require(tx.timestamp?.midpoint != null) { "must be timestamped" }
+                require(tx.timeRange?.midpoint != null) { "must be have a time-range (validation window)" }
                 // We return an empty set because we don't process any commands
                 return emptySet()
             }

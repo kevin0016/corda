@@ -46,7 +46,6 @@ import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.math.BigInteger
 import java.security.KeyPair
-import java.security.PublicKey
 import java.util.*
 import java.util.concurrent.Future
 import java.util.jar.JarOutputStream
@@ -593,7 +592,7 @@ class TwoPartyTradeFlowTests {
                 // Put a broken command on so at least a signature is created
                 command(issuer.owningKey) { Cash.Commands.Move() }
             }
-            timestamp(TEST_TX_TIME)
+            timeRange(TEST_TX_TIME)
             if (withError) {
                 this.fails()
             } else {
@@ -633,7 +632,7 @@ class TwoPartyTradeFlowTests {
             }
             command(MEGA_CORP_PUBKEY) { CommercialPaper.Commands.Issue() }
             if (!withError)
-                timestamp(time = TEST_TX_TIME)
+                timeRange(time = TEST_TX_TIME)
             if (attachmentID != null)
                 attachment(attachmentID)
             if (withError) {

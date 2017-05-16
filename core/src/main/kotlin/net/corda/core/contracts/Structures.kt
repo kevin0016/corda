@@ -5,7 +5,6 @@ import net.corda.core.crypto.SecureHash
 import net.corda.core.flows.FlowLogicRef
 import net.corda.core.flows.FlowLogicRefFactory
 import net.corda.core.identity.AbstractParty
-import net.corda.core.identity.AnonymousParty
 import net.corda.core.identity.Party
 import net.corda.core.node.services.ServiceType
 import net.corda.core.serialization.*
@@ -407,27 +406,27 @@ data class AuthenticatedObject<out T : Any>(
 
 /**
  * If present in a transaction, contains a time that was verified by the uniqueness service. The true time must be
- * between (after, before).
+ * between (fromTime, untilTime).
  */
 @CordaSerializable
-data class Timestamp(val after: Instant?, val before: Instant?) {
+data class TimeRange(val fromTime: Instant?, val untilTime: Instant?) {
     init {
-        if (after == null && before == null)
-            throw IllegalArgumentException("At least one of before/after must be specified")
-        if (after != null && before != null)
-            check(after <= before)
+        if (fromTime == null && untilTime == null)
+            throw IllegalArgumentException("At least one of fromTime/untilTime must be specified")
+        if (fromTime != null && untilTime != null)
+            check(fromTime <= untilTime)
     }
 
     constructor(time: Instant, tolerance: Duration) : this(time - tolerance, time + tolerance)
 
-    val midpoint: Instant get() = after!! + Duration.between(after, before!!).dividedBy(2)
+    val midpoint: Instant get() = fromTime!! + Duration.between(fromTime, untilTime!!).dividedBy(2)
 }
 
 /**
  * Implemented by a program that implements business logic on the shared ledger. All participants run this code for
  * every [LedgerTransaction] they see on the network, for every input and output state. All contracts must accept the
  * transaction for it to be accepted: failure of any aborts the entire thing. The time is taken from a trusted
- * timestamp attached to the transaction itself i.e. it is NOT necessarily the current time.
+ * timeRange attached to the transaction itself i.e. it is NOT necessarily the current time.
  *
  * TODO: Contract serialization is likely to change, so the annotation is likely temporary.
  */
