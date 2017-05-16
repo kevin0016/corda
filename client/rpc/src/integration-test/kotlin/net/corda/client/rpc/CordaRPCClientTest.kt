@@ -28,8 +28,8 @@ import kotlin.test.assertTrue
 
 class CordaRPCClientTest : NodeBasedTest() {
     private val rpcUser = User("user1", "test", permissions = setOf(
-            startFlowPermission<CashIssueFlow>(),
-            startFlowPermission<CashPaymentFlow>()
+            startFlowPermission<CashIssueFlow.Initiator>(),
+            startFlowPermission<CashPaymentFlow.Initiator>()
     ))
     private lateinit var node: Node
     private lateinit var client: CordaRPCClient
@@ -76,7 +76,7 @@ class CordaRPCClientTest : NodeBasedTest() {
         println("Creating proxy")
         println("Starting flow")
         val flowHandle = connection!!.proxy.startTrackedFlow(
-                ::CashIssueFlow,
+                CashIssueFlow::Initiator,
                 20.DOLLARS, OpaqueBytes.of(0), node.info.legalIdentity, node.info.legalIdentity)
         println("Started flow, waiting on result")
         flowHandle.progress.subscribe {
@@ -88,7 +88,7 @@ class CordaRPCClientTest : NodeBasedTest() {
     @Test
     fun `sub-type of FlowException thrown by flow`() {
         login(rpcUser.username, rpcUser.password)
-        val handle = connection!!.proxy.startFlow(::CashPaymentFlow, 100.DOLLARS, node.info.legalIdentity)
+        val handle = connection!!.proxy.startFlow(CashPaymentFlow::Initiator, 100.DOLLARS, node.info.legalIdentity)
         assertThatExceptionOfType(CashException::class.java).isThrownBy {
             handle.returnValue.getOrThrow()
         }
@@ -97,7 +97,7 @@ class CordaRPCClientTest : NodeBasedTest() {
     @Test
     fun `check basic flow has no progress`() {
         login(rpcUser.username, rpcUser.password)
-        connection!!.proxy.startFlow(::CashPaymentFlow, 100.DOLLARS, node.info.legalIdentity).use {
+        connection!!.proxy.startFlow(CashPaymentFlow::Initiator, 100.DOLLARS, node.info.legalIdentity).use {
             assertFalse(it is FlowProgressHandle<*>)
             assertTrue(it is FlowHandle<*>)
         }
@@ -110,7 +110,7 @@ class CordaRPCClientTest : NodeBasedTest() {
         val startCash = proxy.getCashBalances()
         assertTrue(startCash.isEmpty(), "Should not start with any cash")
 
-        val flowHandle = proxy.startFlow(::CashIssueFlow,
+        val flowHandle = proxy.startFlow(CashIssueFlow::Initiator,
                 123.DOLLARS, OpaqueBytes.of(0),
                 node.info.legalIdentity, node.info.legalIdentity
         )
@@ -140,12 +140,12 @@ class CordaRPCClientTest : NodeBasedTest() {
             }
         }
         val nodeIdentity = node.info.legalIdentity
-        node.services.startFlow(CashIssueFlow(2000.DOLLARS, OpaqueBytes.of(0), nodeIdentity, nodeIdentity), FlowInitiator.Shell).resultFuture.getOrThrow()
-        proxy.startFlow(::CashIssueFlow,
+        node.services.startFlow(CashIssueFlow.Initiator(2000.DOLLARS, OpaqueBytes.of(0), nodeIdentity, nodeIdentity), FlowInitiator.Shell).resultFuture.getOrThrow()
+        proxy.startFlow(CashIssueFlow::Initiator,
                 123.DOLLARS, OpaqueBytes.of(0),
                 nodeIdentity, nodeIdentity
         ).returnValue.getOrThrow()
-        proxy.startFlowDynamic(CashIssueFlow::class.java,
+        proxy.startFlowDynamic(CashIssueFlow.Initiator::class.java,
                 1000.DOLLARS, OpaqueBytes.of(0),
                 nodeIdentity, nodeIdentity).returnValue.getOrThrow()
         assertEquals(2, countRpcFlows)

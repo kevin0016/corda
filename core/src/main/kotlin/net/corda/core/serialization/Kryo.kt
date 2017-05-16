@@ -30,6 +30,8 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.security.PrivateKey
 import java.security.PublicKey
+import java.security.cert.CertPath
+import java.security.cert.CertificateFactory
 import java.security.spec.InvalidKeySpecException
 import java.time.Instant
 import java.util.*
@@ -609,6 +611,21 @@ object X500NameSerializer : Serializer<X500Name>() {
     }
 
     override fun write(kryo: Kryo, output: Output, obj: X500Name) {
+        output.writeBytes(obj.encoded)
+    }
+}
+
+/**
+ * For serialising an [CertPath] in an X.500 standard format.
+ */
+@ThreadSafe
+object CertPathSerializer : Serializer<CertPath>() {
+    val factory = CertificateFactory.getInstance("X.509")
+    override fun read(kryo: Kryo, input: Input, type: Class<CertPath>): CertPath {
+        return factory.generateCertPath(input)
+    }
+
+    override fun write(kryo: Kryo, output: Output, obj: CertPath) {
         output.writeBytes(obj.encoded)
     }
 }

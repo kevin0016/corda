@@ -33,7 +33,7 @@ class CashPaymentFlowTests {
         bankOfCorda = bankOfCordaNode.info.legalIdentity
 
         net.runNetwork()
-        val future = bankOfCordaNode.services.startFlow(CashIssueFlow(initialBalance, ref,
+        val future = bankOfCordaNode.services.startFlow(CashIssueFlow.Initiator(initialBalance, ref,
                 bankOfCorda,
                 notary)).resultFuture
         net.runNetwork()
@@ -49,7 +49,7 @@ class CashPaymentFlowTests {
     fun `pay some cash`() {
         val payTo = notaryNode.info.legalIdentity
         val expected = 500.DOLLARS
-        val future = bankOfCordaNode.services.startFlow(CashPaymentFlow(expected,
+        val future = bankOfCordaNode.services.startFlow(CashPaymentFlow.Initiator(expected,
                 payTo)).resultFuture
         net.runNetwork()
         val paymentTx = future.getOrThrow()
@@ -63,7 +63,7 @@ class CashPaymentFlowTests {
     fun `pay more than we have`() {
         val payTo = notaryNode.info.legalIdentity
         val expected = 4000.DOLLARS
-        val future = bankOfCordaNode.services.startFlow(CashPaymentFlow(expected,
+        val future = bankOfCordaNode.services.startFlow(CashPaymentFlow.Initiator(expected,
                 payTo)).resultFuture
         net.runNetwork()
         assertFailsWith<CashException> {
@@ -75,7 +75,7 @@ class CashPaymentFlowTests {
     fun `pay zero cash`() {
         val payTo = notaryNode.info.legalIdentity
         val expected = 0.DOLLARS
-        val future = bankOfCordaNode.services.startFlow(CashPaymentFlow(expected,
+        val future = bankOfCordaNode.services.startFlow(CashPaymentFlow.Initiator(expected,
                 payTo)).resultFuture
         net.runNetwork()
         assertFailsWith<IllegalArgumentException> {

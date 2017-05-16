@@ -63,8 +63,8 @@ class CordaRPCOpsImplTest {
         notaryNode = network.createNode(advertisedServices = ServiceInfo(SimpleNotaryService.type), networkMapAddress = networkMap.info.address)
         rpc = CordaRPCOpsImpl(aliceNode.services, aliceNode.smm, aliceNode.database)
         CURRENT_RPC_CONTEXT.set(RpcContext(User("user", "pwd", permissions = setOf(
-                startFlowPermission<CashIssueFlow>(),
-                startFlowPermission<CashPaymentFlow>()
+                startFlowPermission<CashIssueFlow.Initiator>(),
+                startFlowPermission<CashPaymentFlow.Initiator>()
         ))))
 
         aliceNode.database.transaction {
@@ -86,7 +86,8 @@ class CordaRPCOpsImplTest {
 
         // Tell the monitoring service node to issue some cash
         val recipient = aliceNode.info.legalIdentity
-        rpc.startFlow(::CashIssueFlow, Amount(quantity, GBP), ref, recipient, notaryNode.info.notaryIdentity)
+        rpc.startFlow(CashIssueFlow::Initiator,
+                Amount(quantity, GBP), ref, recipient, notaryNode.info.notaryIdentity)
         network.runNetwork()
 
         val expectedState = Cash.State(Amount(quantity,
@@ -122,7 +123,7 @@ class CordaRPCOpsImplTest {
 
     @Test
     fun `issue and move`() {
-        rpc.startFlow(::CashIssueFlow,
+        rpc.startFlow(CashIssueFlow::Initiator,
                 Amount(100, USD),
                 OpaqueBytes(ByteArray(1, { 1 })),
                 aliceNode.info.legalIdentity,
@@ -131,7 +132,8 @@ class CordaRPCOpsImplTest {
 
         network.runNetwork()
 
-        rpc.startFlow(::CashPaymentFlow, Amount(100, USD), aliceNode.info.legalIdentity)
+        rpc.startFlow(CashPaymentFlow::Initiator,
+                Amount(100, USD), aliceNode.info.legalIdentity)
 
         network.runNetwork()
 
@@ -200,7 +202,7 @@ class CordaRPCOpsImplTest {
     fun `cash command by user not permissioned for cash`() {
         CURRENT_RPC_CONTEXT.set(RpcContext(User("user", "pwd", permissions = emptySet())))
         assertThatExceptionOfType(PermissionException::class.java).isThrownBy {
-            rpc.startFlow(::CashIssueFlow,
+            rpc.startFlow(CashIssueFlow::Initiator,
                     Amount(100, USD),
                     OpaqueBytes(ByteArray(1, { 1 })),
                     aliceNode.info.legalIdentity,

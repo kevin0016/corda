@@ -22,7 +22,7 @@ sealed class CashFlowCommand {
                          val issueRef: OpaqueBytes,
                          val recipient: Party,
                          val notary: Party) : CashFlowCommand() {
-        override fun startFlow(proxy: CordaRPCOps) = proxy.startFlow(::CashIssueFlow, amount, issueRef, recipient, notary)
+        override fun startFlow(proxy: CordaRPCOps) = proxy.startFlow(CashIssueFlow::Initiator, amount, issueRef, recipient, notary)
     }
 
     /**
@@ -32,7 +32,7 @@ sealed class CashFlowCommand {
      * @param recipient the party to issue the cash to.
      */
     data class PayCash(val amount: Amount<Currency>, val recipient: Party, val issuerConstraint: Party? = null) : CashFlowCommand() {
-        override fun startFlow(proxy: CordaRPCOps) = proxy.startFlow(::CashPaymentFlow, amount, recipient)
+        override fun startFlow(proxy: CordaRPCOps) = proxy.startFlow(CashPaymentFlow::Initiator, amount, recipient)
     }
 
     /**
@@ -42,6 +42,6 @@ sealed class CashFlowCommand {
      * @param issueRef the reference previously specified on the issuance.
      */
     data class ExitCash(val amount: Amount<Currency>, val issueRef: OpaqueBytes) : CashFlowCommand() {
-        override fun startFlow(proxy: CordaRPCOps) = proxy.startFlow(::CashExitFlow, amount, issueRef)
+        override fun startFlow(proxy: CordaRPCOps) = proxy.startFlow(CashExitFlow::Initiator, amount, issueRef)
     }
 }

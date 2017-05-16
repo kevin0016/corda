@@ -38,8 +38,8 @@ class DistributedServiceTests : DriverBasedTest() {
         // Start Alice and 3 notaries in a RAFT cluster
         val clusterSize = 3
         val testUser = User("test", "test", permissions = setOf(
-                startFlowPermission<CashIssueFlow>(),
-                startFlowPermission<CashPaymentFlow>())
+                startFlowPermission<CashIssueFlow.Initiator>(),
+                startFlowPermission<CashPaymentFlow.Initiator>())
         )
         val aliceFuture = startNode(ALICE.name, rpcUsers = listOf(testUser))
         val notariesFuture = startNotaryCluster(
@@ -139,13 +139,14 @@ class DistributedServiceTests : DriverBasedTest() {
 
     private fun issueCash(amount: Amount<Currency>) {
         val issueHandle = aliceProxy.startFlow(
-                ::CashIssueFlow,
+                CashIssueFlow::Initiator,
                 amount, OpaqueBytes.of(0), alice.nodeInfo.legalIdentity, raftNotaryIdentity)
         issueHandle.returnValue.getOrThrow()
     }
 
     private fun paySelf(amount: Amount<Currency>) {
-        val payHandle = aliceProxy.startFlow(::CashPaymentFlow, amount, alice.nodeInfo.legalIdentity)
+        val payHandle = aliceProxy.startFlow(CashPaymentFlow::Initiator,
+                amount, alice.nodeInfo.legalIdentity)
         payHandle.returnValue.getOrThrow()
     }
 }

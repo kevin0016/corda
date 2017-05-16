@@ -33,10 +33,10 @@ class IntegrationTestingTutorial {
         // START 1
         driver {
             val aliceUser = User("aliceUser", "testPassword1", permissions = setOf(
-                    startFlowPermission<CashIssueFlow>()
+                    startFlowPermission<CashIssueFlow.Initiator>()
             ))
             val bobUser = User("bobUser", "testPassword2", permissions = setOf(
-                    startFlowPermission<CashPaymentFlow>()
+                    startFlowPermission<CashPaymentFlow.Initiator>()
             ))
             val (alice, bob, notary) = Futures.allAsList(
                     startNode(ALICE.name, rpcUsers = listOf(aliceUser)),
@@ -63,7 +63,7 @@ class IntegrationTestingTutorial {
             val futures = Stack<ListenableFuture<*>>()
             (1..10).map { i ->
                 thread {
-                    futures.push(aliceProxy.startFlow(::CashIssueFlow,
+                    futures.push(aliceProxy.startFlow(CashIssueFlow::Initiator,
                             i.DOLLARS,
                             issueRef,
                             bob.nodeInfo.legalIdentity,
@@ -90,7 +90,8 @@ class IntegrationTestingTutorial {
 
             // START 5
             for (i in 1..10) {
-                bobProxy.startFlow(::CashPaymentFlow, i.DOLLARS, alice.nodeInfo.legalIdentity).returnValue.getOrThrow()
+                bobProxy.startFlow(CashPaymentFlow::Initiator,
+                        i.DOLLARS, alice.nodeInfo.legalIdentity).returnValue.getOrThrow()
             }
 
             aliceVaultUpdates.expectEvents {

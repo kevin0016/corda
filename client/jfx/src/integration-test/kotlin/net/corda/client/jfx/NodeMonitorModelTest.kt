@@ -59,9 +59,9 @@ class NodeMonitorModelTest : DriverBasedTest() {
 
     override fun setup() = driver {
         val cashUser = User("user1", "test", permissions = setOf(
-                startFlowPermission<CashIssueFlow>(),
-                startFlowPermission<CashPaymentFlow>(),
-                startFlowPermission<CashExitFlow>())
+                startFlowPermission<CashIssueFlow.Initiator>(),
+                startFlowPermission<CashPaymentFlow.Initiator>(),
+                startFlowPermission<CashExitFlow.Initiator>())
         )
         val aliceNodeFuture = startNode(ALICE.name, rpcUsers = listOf(cashUser))
         val notaryNodeFuture = startNode(DUMMY_NOTARY.name, advertisedServices = setOf(ServiceInfo(SimpleNotaryService.type)))
@@ -113,7 +113,7 @@ class NodeMonitorModelTest : DriverBasedTest() {
 
     @Test
     fun `cash issue works end to end`() {
-        rpc.startFlow(::CashIssueFlow,
+        rpc.startFlow(CashIssueFlow::Initiator,
                 Amount(100, USD),
                 OpaqueBytes(ByteArray(1, { 1 })),
                 aliceNode.legalIdentity,
@@ -138,8 +138,10 @@ class NodeMonitorModelTest : DriverBasedTest() {
 
     @Test
     fun `cash issue and move`() {
-        rpc.startFlow(::CashIssueFlow, 100.DOLLARS, OpaqueBytes.of(1), aliceNode.legalIdentity, notaryNode.notaryIdentity).returnValue.getOrThrow()
-        rpc.startFlow(::CashPaymentFlow, 100.DOLLARS, bobNode.legalIdentity).returnValue.getOrThrow()
+        rpc.startFlow(CashIssueFlow::Initiator,
+                100.DOLLARS, OpaqueBytes.of(1), aliceNode.legalIdentity, notaryNode.notaryIdentity).returnValue.getOrThrow()
+        rpc.startFlow(CashPaymentFlow::Initiator,
+                100.DOLLARS, bobNode.legalIdentity).returnValue.getOrThrow()
 
         var issueSmId: StateMachineRunId? = null
         var moveSmId: StateMachineRunId? = null

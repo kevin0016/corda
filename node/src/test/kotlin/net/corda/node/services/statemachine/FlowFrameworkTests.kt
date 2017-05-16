@@ -320,14 +320,14 @@ class FlowFrameworkTests {
     @Test
     fun `different notaries are picked when addressing shared notary identity`() {
         assertEquals(notary1.info.notaryIdentity, notary2.info.notaryIdentity)
-        node1.services.startFlow(CashIssueFlow(
+        node1.services.startFlow(CashIssueFlow.Initiator(
                 2000.DOLLARS,
                 OpaqueBytes.of(0x01),
                 node1.info.legalIdentity,
                 notary1.info.notaryIdentity))
         // We pay a couple of times, the notary picking should go round robin
         for (i in 1..3) {
-            node1.services.startFlow(CashPaymentFlow(500.DOLLARS, node2.info.legalIdentity))
+            node1.services.startFlow(CashPaymentFlow.Initiator(500.DOLLARS, node2.info.legalIdentity))
             net.runNetwork()
         }
         val endpoint = net.messagingNetwork.endpoint(notary1.net.myAddress as InMemoryMessagingNetwork.PeerHandle)!!

@@ -42,7 +42,7 @@ class CashIssueFlowTests {
     fun `issue some cash`() {
         val expected = 500.DOLLARS
         val ref = OpaqueBytes.of(0x01)
-        val future = bankOfCordaNode.services.startFlow(CashIssueFlow(expected, ref,
+        val future = bankOfCordaNode.services.startFlow(CashIssueFlow.Initiator(expected, ref,
                 bankOfCorda,
                 notary)).resultFuture
         net.runNetwork()
@@ -54,7 +54,7 @@ class CashIssueFlowTests {
     @Test
     fun `issue zero cash`() {
         val expected = 0.DOLLARS
-        val future = bankOfCordaNode.services.startFlow(CashIssueFlow(expected, OpaqueBytes.of(0x01),
+        val future = bankOfCordaNode.services.startFlow(CashIssueFlow.Initiator(expected, OpaqueBytes.of(0x01),
                 bankOfCorda,
                 notary)).resultFuture
         net.runNetwork()

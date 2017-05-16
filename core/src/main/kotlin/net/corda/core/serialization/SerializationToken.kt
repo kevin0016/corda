@@ -78,7 +78,7 @@ fun <T> Kryo.withSerializationContext(serializationContext: SerializeAsTokenCont
  * Then it is a case of using the companion object methods on [SerializeAsTokenSerializer] to set and clear context as necessary
  * on the Kryo instance when serializing to enable/disable tokenization.
  */
-class SerializeAsTokenContext internal constructor(val serviceHub: ServiceHub, init: SerializeAsTokenContext.() -> Unit) {
+class SerializeAsTokenContext constructor(val serviceHub: ServiceHub, init: SerializeAsTokenContext.() -> Unit) {
     constructor(toBeTokenized: Any, kryoPool: KryoPool, serviceHub: ServiceHub) : this(serviceHub, {
         kryoPool.run { kryo ->
             kryo.withSerializationContext(this) {

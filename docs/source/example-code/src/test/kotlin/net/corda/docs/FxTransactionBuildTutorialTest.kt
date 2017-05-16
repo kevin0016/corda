@@ -49,7 +49,7 @@ class FxTransactionBuildTutorialTest {
     @Test
     fun `Run ForeignExchangeFlow to completion`() {
         // Use NodeA as issuer and create some dollars
-        val flowHandle1 = nodeA.services.startFlow(CashIssueFlow(DOLLARS(1000),
+        val flowHandle1 = nodeA.services.startFlow(CashIssueFlow.Initiator(DOLLARS(1000),
                 OpaqueBytes.of(0x01),
                 nodeA.info.legalIdentity,
                 notaryNode.info.notaryIdentity))
@@ -58,7 +58,7 @@ class FxTransactionBuildTutorialTest {
         printBalances()
 
         // Using NodeB as Issuer create some pounds.
-        val flowHandle2 = nodeB.services.startFlow(CashIssueFlow(POUNDS(1000),
+        val flowHandle2 = nodeB.services.startFlow(CashIssueFlow.Initiator(POUNDS(1000),
                 OpaqueBytes.of(0x01),
                 nodeB.info.legalIdentity,
                 notaryNode.info.notaryIdentity))

@@ -80,7 +80,7 @@ class StandaloneCordaRPClientTest {
 
     @Test
     fun `test starting flow`() {
-        rpcProxy.startFlow(::CashIssueFlow, 127.POUNDS, OpaqueBytes.of(0), notaryIdentity, notaryIdentity)
+        rpcProxy.startFlow(CashIssueFlow::Initiator, 127.POUNDS, OpaqueBytes.of(0), notaryIdentity, notaryIdentity)
             .returnValue.getOrThrow(ofSeconds(timeout))
     }
 
@@ -88,7 +88,7 @@ class StandaloneCordaRPClientTest {
     fun `test starting tracked flow`() {
         var trackCount = 0
         val handle = rpcProxy.startTrackedFlow(
-            ::CashIssueFlow, 429.DOLLARS, OpaqueBytes.of(0), notaryIdentity, notaryIdentity
+            CashIssueFlow::Initiator, 429.DOLLARS, OpaqueBytes.of(0), notaryIdentity, notaryIdentity
         )
         handle.progress.subscribe { msg ->
             log.info("Flow>> $msg")
@@ -117,7 +117,7 @@ class StandaloneCordaRPClientTest {
         }
 
         // Now issue some cash
-        rpcProxy.startFlow(::CashIssueFlow, 513.SWISS_FRANCS, OpaqueBytes.of(0), notaryIdentity, notaryIdentity)
+        rpcProxy.startFlow(CashIssueFlow::Initiator, 513.SWISS_FRANCS, OpaqueBytes.of(0), notaryIdentity, notaryIdentity)
             .returnValue.getOrThrow(ofSeconds(timeout))
         assertEquals(1, updateCount)
     }
@@ -134,7 +134,7 @@ class StandaloneCordaRPClientTest {
         }
 
         // Now issue some cash
-        rpcProxy.startFlow(::CashIssueFlow, 629.POUNDS, OpaqueBytes.of(0), notaryIdentity, notaryIdentity)
+        rpcProxy.startFlow(CashIssueFlow::Initiator, 629.POUNDS, OpaqueBytes.of(0), notaryIdentity, notaryIdentity)
             .returnValue.getOrThrow(ofSeconds(timeout))
         assertNotEquals(0, updateCount)
 

@@ -33,7 +33,7 @@ class CashExitFlowTests {
         bankOfCorda = bankOfCordaNode.info.legalIdentity
 
         net.runNetwork()
-        val future = bankOfCordaNode.services.startFlow(CashIssueFlow(initialBalance, ref,
+        val future = bankOfCordaNode.services.startFlow(CashIssueFlow.Initiator(initialBalance, ref,
                 bankOfCorda,
                 notary)).resultFuture
         net.runNetwork()
@@ -48,7 +48,7 @@ class CashExitFlowTests {
     @Test
     fun `exit some cash`() {
         val exitAmount = 500.DOLLARS
-        val future = bankOfCordaNode.services.startFlow(CashExitFlow(exitAmount,
+        val future = bankOfCordaNode.services.startFlow(CashExitFlow.Initiator(exitAmount,
                 ref)).resultFuture
         net.runNetwork()
         val exitTx = future.getOrThrow().tx
@@ -62,7 +62,7 @@ class CashExitFlowTests {
     @Test
     fun `exit zero cash`() {
         val expected = 0.DOLLARS
-        val future = bankOfCordaNode.services.startFlow(CashExitFlow(expected,
+        val future = bankOfCordaNode.services.startFlow(CashExitFlow.Initiator(expected,
                 ref)).resultFuture
         net.runNetwork()
         assertFailsWith<CashException> {

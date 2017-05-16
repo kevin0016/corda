@@ -26,9 +26,11 @@ import org.bouncycastle.pqc.jcajce.provider.sphincs.BCSphincs256PrivateKey
 import org.bouncycastle.pqc.jcajce.provider.sphincs.BCSphincs256PublicKey
 import org.objenesis.strategy.StdInstantiatorStrategy
 import org.slf4j.Logger
+import sun.security.provider.certpath.X509CertPath
 import java.io.BufferedInputStream
 import java.io.FileInputStream
 import java.io.InputStream
+import java.security.cert.CertPath
 import java.util.*
 
 object DefaultKryoCustomizer {
@@ -97,6 +99,8 @@ object DefaultKryoCustomizer {
             // Note that return type should be specifically set to InputStream, otherwise it may not work, i.e. val aStream : InputStream = HashCheckingStream(...).
             addDefaultSerializer(InputStream::class.java, InputStreamSerializer)
 
+            register(CertPath::class.java, CertPathSerializer)
+            register(X509CertPath::class.java, CertPathSerializer)
             register(X500Name::class.java, X500NameSerializer)
 
             register(BCECPrivateKey::class.java, PrivateKeySerializer)

@@ -44,9 +44,9 @@ fun main(args: Array<String>) {
     val printOrVisualise = PrintOrVisualise.valueOf(args[0])
 
     val baseDirectory = Paths.get("build/rpc-api-tutorial")
-    val user = User("user", "password", permissions = setOf(startFlowPermission<CashIssueFlow>(),
-            startFlowPermission<CashPaymentFlow>(),
-            startFlowPermission<CashExitFlow>()))
+    val user = User("user", "password", permissions = setOf(startFlowPermission<CashIssueFlow.Initiator>(),
+            startFlowPermission<CashPaymentFlow.Initiator>(),
+            startFlowPermission<CashExitFlow.Initiator>()))
 
     driver(driverDirectory = baseDirectory) {
         startNode(DUMMY_NOTARY.name, advertisedServices = setOf(ServiceInfo(ValidatingNotaryService.type)))
@@ -121,14 +121,14 @@ fun generateTransactions(proxy: CordaRPCOps) {
         val n = random.nextDouble()
         if (ownedQuantity > 10000 && n > 0.8) {
             val quantity = Math.abs(random.nextLong()) % 2000
-            proxy.startFlow(::CashExitFlow, Amount(quantity, USD), issueRef)
+            proxy.startFlow(CashExitFlow::Initiator, Amount(quantity, USD), issueRef)
             ownedQuantity -= quantity
         } else if (ownedQuantity > 1000 && n < 0.7) {
             val quantity = Math.abs(random.nextLong() % Math.min(ownedQuantity, 2000))
-            proxy.startFlow(::CashPaymentFlow, Amount(quantity, USD), me)
+            proxy.startFlow(CashPaymentFlow::Initiator, Amount(quantity, USD), me)
         } else {
             val quantity = Math.abs(random.nextLong() % 1000)
-            proxy.startFlow(::CashIssueFlow, Amount(quantity, USD), issueRef, me, notary)
+            proxy.startFlow(CashIssueFlow::Initiator, Amount(quantity, USD), issueRef, me, notary)
             ownedQuantity += quantity
         }
     }

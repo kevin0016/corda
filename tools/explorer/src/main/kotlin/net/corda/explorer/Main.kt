@@ -157,12 +157,12 @@ fun main(args: Array<String>) {
     val portAllocation = PortAllocation.Incremental(20000)
     driver(portAllocation = portAllocation) {
         val user = User("user1", "test", permissions = setOf(
-                startFlowPermission<CashPaymentFlow>()
+                startFlowPermission<CashPaymentFlow.Initiator>()
         ))
         val manager = User("manager", "test", permissions = setOf(
-                startFlowPermission<CashIssueFlow>(),
-                startFlowPermission<CashPaymentFlow>(),
-                startFlowPermission<CashExitFlow>(),
+                startFlowPermission<CashIssueFlow.Initiator>(),
+                startFlowPermission<CashPaymentFlow.Initiator>(),
+                startFlowPermission<CashExitFlow.Initiator>(),
                 startFlowPermission<IssuanceRequester>())
         )
         // TODO : Supported flow should be exposed somehow from the node instead of set of ServiceInfo.

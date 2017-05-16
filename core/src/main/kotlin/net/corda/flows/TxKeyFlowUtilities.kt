@@ -23,16 +23,17 @@ object TxKeyFlowUtilities {
     fun receiveKey(flow: FlowLogic<*>, otherSide: Party): CertPath {
         val untrustedKey = flow.receive<CertPath>(otherSide)
         return untrustedKey.unwrap { certPath ->
-            val theirCert = certPath.certificates.lastOrNull()
-            if (theirCert != null
-                    && theirCert is X509Certificate
-                    && theirCert.subjectDN == X500Principal(otherSide.name.encoded)) {
+            val theirCert = certPath.certificates.lastOrNull() ?: throw IllegalStateException("Certificate path is empty")
+            if (theirCert is X509Certificate) {
+                val certName = X500Name(theirCert.subjectDN.name)
+                if (certName == otherSide.name)
                 // FIXME: Validate and store the path once we have access to root certificates
-                certPath
-            } else {
-                null
-            }
-        } ?: throw IllegalStateException("Received invalid response from remote party")
+                    certPath
+                else
+                    throw IllegalStateException("Expected certificate subject to be ${otherSide.name} but found ${certName}")
+            } else
+                throw IllegalStateException("Expected an X.509 certificate but received ${theirCert.javaClass.name}")
+        }
     }
 
     /**
@@ -42,7 +43,12 @@ object TxKeyFlowUtilities {
      */
     @Suspendable
     fun provideKey(flow: FlowLogic<*>, otherSide: Party, revocationEnabled: Boolean): CertPath {
-        val ourCertPath = flow.serviceHub.identityService.createTransactionIdentity(flow.serviceHub.myInfo.legalIdentity, revocationEnabled)
+        val ourPublicKey = flow.serviceHub.keyManagementService.freshKey().public
+        // FIXME: Use the actual certificate for the identity the flow is presenting themselves as
+        val selfSignedCertificate = X509Utilities.createSelfSignedCACert(flow.serviceHub.myInfo.legalIdentity.name)
+        val ourCertificate = X509Utilities.createServerCert(flow.serviceHub.myInfo.legalIdentity.name, ourPublicKey,
+                selfSignedCertificate, emptyList(), emptyList())
+        val ourCertPath = X509Utilities.createCertificatePath(selfSignedCertificate, ourCertificate, revocationEnabled).certPath
         flow.send(otherSide, ourCertPath)
         return ourCertPath
     }

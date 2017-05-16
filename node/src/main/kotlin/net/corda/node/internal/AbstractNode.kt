@@ -248,9 +248,12 @@ abstract class AbstractNode(open val configuration: NodeConfiguration,
                     // Add any core flows here
                     listOf(ContractUpgradeFlow::class.java,
                             // TODO Remove all Cash flows from default list once they are split into separate CorDapp.
-                            CashIssueFlow::class.java,
-                            CashExitFlow::class.java,
-                            CashPaymentFlow::class.java)
+                            CashIssueFlow.Initiator::class.java,
+                            CashIssueFlow.Recipient::class.java,
+                            CashExitFlow.Initiator::class.java,
+                            CashPaymentFlow.Initiator::class.java)
+            // TODO Remove all Cash flows from default list once they are split into separate CorDapp.
+            services.registerServiceFlow(CashIssueFlow.Initiator::class.java, CashIssueFlow::Recipient)
 
             runOnStop += Runnable { net.stop() }
             _networkMapRegistrationFuture.setFuture(registerWithNetworkMapIfConfigured())
