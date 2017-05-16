@@ -8,7 +8,7 @@ import net.corda.core.flows.FlowException
 import net.corda.core.flows.FlowLogic
 import net.corda.core.flows.InitiatingFlow
 import net.corda.core.identity.Party
-import net.corda.core.node.services.TimestampChecker
+import net.corda.core.node.services.TimeRangeChecker
 import net.corda.core.node.services.UniquenessException
 import net.corda.core.node.services.UniquenessProvider
 import net.corda.core.serialization.CordaSerializable
@@ -94,7 +94,7 @@ object NotaryFlow {
      */
     // See AbstractStateReplacementFlow.Acceptor for why it's Void?
     abstract class Service(val otherSide: Party,
-                           val timestampChecker: TimestampChecker,
+                           val timeRangeChecker: TimeRangeChecker,
                            val uniquenessProvider: UniquenessProvider) : FlowLogic<Void?>() {
         @Suspendable
         override fun call(): Void? {
@@ -119,7 +119,7 @@ object NotaryFlow {
         }
 
         private fun validateTimestamp(t: TimeRange?) {
-            if (t != null && !timestampChecker.isValid(t))
+            if (t != null && !timeRangeChecker.isValid(t))
                 throw NotaryException(NotaryError.TimestampInvalid)
         }
 

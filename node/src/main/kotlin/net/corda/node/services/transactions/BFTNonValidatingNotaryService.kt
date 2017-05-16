@@ -2,9 +2,9 @@ package net.corda.node.services.transactions
 
 import co.paralleluniverse.fibers.Suspendable
 import net.corda.core.crypto.DigitalSignature
-import net.corda.core.identity.Party
 import net.corda.core.flows.FlowLogic
-import net.corda.core.node.services.TimestampChecker
+import net.corda.core.identity.Party
+import net.corda.core.node.services.TimeRangeChecker
 import net.corda.core.serialization.deserialize
 import net.corda.core.serialization.serialize
 import net.corda.core.transactions.FilteredTransaction
@@ -22,13 +22,13 @@ import kotlin.concurrent.thread
  * A transaction is notarised when the consensus is reached by the cluster on its uniqueness, and timeRange validity.
  */
 class BFTNonValidatingNotaryService(services: ServiceHubInternal,
-                                    timestampChecker: TimestampChecker,
+                                    timeRangeChecker: TimeRangeChecker,
                                     serverId: Int,
                                     db: Database,
                                     val client: BFTSMaRt.Client) : NotaryService {
     init {
         thread(name = "BFTSmartServer-$serverId", isDaemon = true) {
-            Server(serverId, db, "bft_smart_notary_committed_states", services, timestampChecker)
+            Server(serverId, db, "bft_smart_notary_committed_states", services, timeRangeChecker)
         }
     }
 
@@ -66,7 +66,7 @@ class BFTNonValidatingNotaryService(services: ServiceHubInternal,
                          db: Database,
                          tableName: String,
                          services: ServiceHubInternal,
-                         timestampChecker: TimestampChecker) : BFTSMaRt.Server(id, db, tableName, services, timestampChecker) {
+                         timeRangeChecker: TimeRangeChecker) : BFTSMaRt.Server(id, db, tableName, services, timeRangeChecker) {
 
         override fun executeCommand(command: ByteArray): ByteArray {
             val request = command.deserialize<BFTSMaRt.CommitRequest>()

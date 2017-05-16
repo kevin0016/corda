@@ -508,20 +508,20 @@ abstract class AbstractNode(open val configuration: NodeConfiguration,
     }
 
     open protected fun makeNotaryService(type: ServiceType, tokenizableServices: MutableList<Any>) {
-        val timestampChecker = TimestampChecker(platformClock, 30.seconds)
+        val timeRangeChecker = TimeRangeChecker(platformClock, 30.seconds)
         val uniquenessProvider = makeUniquenessProvider(type)
         tokenizableServices.add(uniquenessProvider)
 
         val notaryService = when (type) {
-            SimpleNotaryService.type -> SimpleNotaryService(timestampChecker, uniquenessProvider)
-            ValidatingNotaryService.type -> ValidatingNotaryService(timestampChecker, uniquenessProvider)
-            RaftNonValidatingNotaryService.type -> RaftNonValidatingNotaryService(timestampChecker, uniquenessProvider as RaftUniquenessProvider)
-            RaftValidatingNotaryService.type -> RaftValidatingNotaryService(timestampChecker, uniquenessProvider as RaftUniquenessProvider)
+            SimpleNotaryService.type -> SimpleNotaryService(timeRangeChecker, uniquenessProvider)
+            ValidatingNotaryService.type -> ValidatingNotaryService(timeRangeChecker, uniquenessProvider)
+            RaftNonValidatingNotaryService.type -> RaftNonValidatingNotaryService(timeRangeChecker, uniquenessProvider as RaftUniquenessProvider)
+            RaftValidatingNotaryService.type -> RaftValidatingNotaryService(timeRangeChecker, uniquenessProvider as RaftUniquenessProvider)
             BFTNonValidatingNotaryService.type -> with(configuration as FullNodeConfiguration) {
                 val nodeId = notaryNodeId ?: throw IllegalArgumentException("notaryNodeId value must be specified in the configuration")
                 val client = BFTSMaRt.Client(nodeId)
                 tokenizableServices += client
-                BFTNonValidatingNotaryService(services, timestampChecker, nodeId, database, client)
+                BFTNonValidatingNotaryService(services, timeRangeChecker, nodeId, database, client)
             }
             else -> {
                 throw IllegalArgumentException("Notary type ${type.id} is not handled by makeNotaryService.")

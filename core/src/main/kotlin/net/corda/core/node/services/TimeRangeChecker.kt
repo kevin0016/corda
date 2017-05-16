@@ -9,11 +9,11 @@ import java.time.Duration
 /**
  * Checks if the given timeRange falls within the allowed tolerance interval.
  */
-class TimestampChecker(val clock: Clock = Clock.systemUTC(),
+class TimeRangeChecker(val clock: Clock = Clock.systemUTC(),
                        val tolerance: Duration = 30.seconds) {
-    fun isValid(timestampCommand: TimeRange): Boolean {
-        val untilTime = timestampCommand.untilTime
-        val fromTime = timestampCommand.fromTime
+    fun isValid(timeRange: TimeRange): Boolean {
+        val untilTime = timeRange.untilTime
+        val fromTime = timeRange.fromTime
 
         val now = clock.instant()
 

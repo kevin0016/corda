@@ -2,7 +2,7 @@ package net.corda.node.services.transactions
 
 import co.paralleluniverse.fibers.Suspendable
 import net.corda.core.identity.Party
-import net.corda.core.node.services.TimestampChecker
+import net.corda.core.node.services.TimeRangeChecker
 import net.corda.core.node.services.UniquenessProvider
 import net.corda.core.transactions.FilteredTransaction
 import net.corda.core.utilities.unwrap
@@ -10,8 +10,8 @@ import net.corda.flows.NotaryFlow
 import net.corda.flows.TransactionParts
 
 class NonValidatingNotaryFlow(otherSide: Party,
-                              timestampChecker: TimestampChecker,
-                              uniquenessProvider: UniquenessProvider) : NotaryFlow.Service(otherSide, timestampChecker, uniquenessProvider) {
+                              timeRangeChecker: TimeRangeChecker,
+                              uniquenessProvider: UniquenessProvider) : NotaryFlow.Service(otherSide, timeRangeChecker, uniquenessProvider) {
     /**
      * The received transaction is not checked for contract-validity, as that would require fully
      * resolving it into a [TransactionForVerification], for which the caller would have to reveal the whole transaction

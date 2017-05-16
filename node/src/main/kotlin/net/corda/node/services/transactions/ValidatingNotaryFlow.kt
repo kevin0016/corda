@@ -3,7 +3,7 @@ package net.corda.node.services.transactions
 import co.paralleluniverse.fibers.Suspendable
 import net.corda.core.contracts.TransactionVerificationException
 import net.corda.core.identity.Party
-import net.corda.core.node.services.TimestampChecker
+import net.corda.core.node.services.TimeRangeChecker
 import net.corda.core.node.services.UniquenessProvider
 import net.corda.core.transactions.SignedTransaction
 import net.corda.core.transactions.WireTransaction
@@ -18,9 +18,9 @@ import java.security.SignatureException
  * indeed valid.
  */
 class ValidatingNotaryFlow(otherSide: Party,
-                           timestampChecker: TimestampChecker,
+                           timeRangeChecker: TimeRangeChecker,
                            uniquenessProvider: UniquenessProvider) :
-        NotaryFlow.Service(otherSide, timestampChecker, uniquenessProvider) {
+        NotaryFlow.Service(otherSide, timeRangeChecker, uniquenessProvider) {
     /**
      * The received transaction is checked for contract-validity, which requires fully resolving it into a
      * [TransactionForVerification], for which the caller also has to to reveal the whole transaction

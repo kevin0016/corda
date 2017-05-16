@@ -9,9 +9,12 @@ import bftsmart.tom.server.defaultservices.DefaultReplier
 import bftsmart.tom.util.Extractor
 import net.corda.core.contracts.StateRef
 import net.corda.core.contracts.TimeRange
-import net.corda.core.crypto.*
+import net.corda.core.crypto.DigitalSignature
+import net.corda.core.crypto.SecureHash
+import net.corda.core.crypto.SignedData
+import net.corda.core.crypto.sign
 import net.corda.core.identity.Party
-import net.corda.core.node.services.TimestampChecker
+import net.corda.core.node.services.TimeRangeChecker
 import net.corda.core.node.services.UniquenessProvider
 import net.corda.core.serialization.CordaSerializable
 import net.corda.core.serialization.SingletonSerializeAsToken
@@ -138,7 +141,7 @@ object BFTSMaRt {
                           val db: Database,
                           tableName: String,
                           val services: ServiceHubInternal,
-                          val timestampChecker: TimestampChecker) : DefaultRecoverable() {
+                          val timeRangeChecker: TimeRangeChecker) : DefaultRecoverable() {
         companion object {
             private val log = loggerFor<Server>()
         }
@@ -193,7 +196,7 @@ object BFTSMaRt {
         }
 
         protected fun validateTimestamp(t: TimeRange?) {
-            if (t != null && !timestampChecker.isValid(t))
+            if (t != null && !timeRangeChecker.isValid(t))
                 throw NotaryException(NotaryError.TimestampInvalid)
         }
 
