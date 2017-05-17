@@ -81,7 +81,7 @@ object FixingFlow {
 
                     // And add a request for timestamping: it may be that none of the contracts need this! But it can't hurt
                     // to have one.
-                    ptx.setTime(serviceHub.clock.instant(), 30.seconds)
+                    ptx.addTimeRange(serviceHub.clock.instant(), 30.seconds)
                 }
 
                 @Suspendable

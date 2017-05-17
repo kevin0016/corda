@@ -39,7 +39,7 @@ open class TransactionBuilder(
         protected val signers: MutableSet<PublicKey> = mutableSetOf(),
         protected var timeRange: TimeRange? = null) {
 
-    val time: TimeRange? get() = timeRange
+    val time: TimeRange? get() = timeRange // TODO: rename using a more descriptive name (i.e. timeRangeGetter) or remove if unused.
 
     /**
      * Creates a copy of the builder.
@@ -57,24 +57,24 @@ open class TransactionBuilder(
             )
 
     /**
-     * Places a [TimestampCommand] in this transaction, removing any existing command if there is one.
+     * Places a [TimeRange] in this transaction, removing any existing command if there is one.
      * The command requires a signature from the Notary service, which acts as a Timestamp Authority.
      * The signature can be obtained using [NotaryFlow].
      *
-     * The window of time in which the final timeRange may lie is defined as [time] +/- [timeTolerance].
+     * The window of time in which the final time-range may lie is defined as [time] +/- [timeTolerance].
      * If you want a non-symmetrical time window you must add the command via [addCommand] yourself. The tolerance
      * should be chosen such that your code can finish building the transaction and sending it to the TSA within that
      * window of time, taking into account factors such as network latency. Transactions being built by a group of
      * collaborating parties may therefore require a higher time tolerance than a transaction being built by a single
      * node.
      */
-    fun setTime(time: Instant, timeTolerance: Duration) = setTime(TimeRange(time, timeTolerance))
+    fun addTimeRange(time: Instant, timeTolerance: Duration) = addTimeRange(TimeRange(time, timeTolerance))
 
-    fun setTime(newTimestamp: TimeRange) {
-        check(notary != null) { "Only notarised transactions can have a timeRange" }
+    fun addTimeRange(timeRange: TimeRange) {
+        check(notary != null) { "Only notarised transactions can have a time-range (validation window)" }
         signers.add(notary!!.owningKey)
-        check(currentSigs.isEmpty()) { "Cannot change timeRange after signing" }
-        this.timeRange = newTimestamp
+        check(currentSigs.isEmpty()) { "Cannot change time-range (validation window) after signing" }
+        this.timeRange = timeRange
     }
 
     /** A more convenient way to add items to this transaction that calls the add* methods for you based on type */

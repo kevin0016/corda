@@ -47,7 +47,7 @@ class NotaryServiceTests {
         val stx = run {
             val inputState = issueState(clientNode)
             val tx = TransactionType.General.Builder(notaryNode.info.notaryIdentity).withItems(inputState)
-            tx.setTime(Instant.now(), 30.seconds)
+            tx.addTimeRange(Instant.now(), 30.seconds)
             tx.signWith(clientKeyPair)
             tx.toSignedTransaction(false)
         }
@@ -74,7 +74,7 @@ class NotaryServiceTests {
         val stx = run {
             val inputState = issueState(clientNode)
             val tx = TransactionType.General.Builder(notaryNode.info.notaryIdentity).withItems(inputState)
-            tx.setTime(Instant.now().plusSeconds(3600), 30.seconds)
+            tx.addTimeRange(Instant.now().plusSeconds(3600), 30.seconds)
             tx.signWith(clientKeyPair)
             tx.toSignedTransaction(false)
         }

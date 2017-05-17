@@ -133,7 +133,7 @@ class SubmitTradeApprovalFlow(val tradeId: String,
         // Create the TransactionBuilder and populate with the new state.
         val tx = TransactionType.General.Builder(notary)
                 .withItems(tradeProposal, Command(TradeApprovalContract.Commands.Issue(), listOf(tradeProposal.source.owningKey)))
-        tx.setTime(serviceHub.clock.instant(), Duration.ofSeconds(60))
+        tx.addTimeRange(serviceHub.clock.instant(), Duration.ofSeconds(60))
         // We can automatically sign as there is no untrusted data.
         tx.signWith(serviceHub.legalIdentityKey)
         // Convert to a SignedTransaction that we can send to the notary
@@ -196,7 +196,7 @@ class SubmitCompletionFlow(val ref: StateRef, val verdict: WorkflowState) : Flow
                         newState,
                         Command(TradeApprovalContract.Commands.Completed(),
                                 listOf(serviceHub.myInfo.legalIdentity.owningKey, latestRecord.state.data.source.owningKey)))
-        tx.setTime(serviceHub.clock.instant(), Duration.ofSeconds(60))
+        tx.addTimeRange(serviceHub.clock.instant(), Duration.ofSeconds(60))
         // We can sign this transaction immediately as we have already checked all the fields and the decision
         // is ultimately a manual one from the caller.
         tx.signWith(serviceHub.legalIdentityKey)

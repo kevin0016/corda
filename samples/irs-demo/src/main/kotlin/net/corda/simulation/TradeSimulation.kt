@@ -41,7 +41,7 @@ class TradeSimulation(runAsync: Boolean, latencyInjector: InMemoryMessagingNetwo
                     1100.DOLLARS `issued by` DUMMY_CASH_ISSUER,
                     Instant.now() + 10.days,
                     notary.info.notaryIdentity)
-            tx.setTime(Instant.now(), 30.seconds)
+            tx.addTimeRange(Instant.now(), 30.seconds)
             val notaryKey = notary.services.notaryIdentityKey
             val sellerKey = seller.services.legalIdentityKey
             tx.signWith(notaryKey)

@@ -189,7 +189,7 @@ object TwoPartyDealFlow {
 
             // And add a request for timestamping: it may be that none of the contracts need this! But it can't hurt
             // to have one.
-            ptx.setTime(serviceHub.clock.instant(), 30.seconds)
+            ptx.addTimeRange(serviceHub.clock.instant(), 30.seconds)
             return Pair(ptx, arrayListOf(deal.parties.single { it == serviceHub.myInfo.legalIdentity as AbstractParty }.owningKey))
         }
     }

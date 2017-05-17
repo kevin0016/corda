@@ -19,7 +19,6 @@ import net.corda.core.utilities.ProgressTracker
 import net.corda.flows.NotaryFlow
 import net.corda.flows.TwoPartyTradeFlow
 import net.corda.testing.BOC
-import java.security.PublicKey
 import java.time.Instant
 import java.util.*
 
@@ -83,7 +82,7 @@ class SellerFlow(val otherParty: Party,
             tx.addAttachment(serviceHub.storageService.attachments.openAttachment(PROSPECTUS_HASH)!!.id)
 
             // Requesting timestamping, all CP must be timestamped.
-            tx.setTime(Instant.now(), 30.seconds)
+            tx.addTimeRange(Instant.now(), 30.seconds)
 
             // Sign it as ourselves.
             tx.signWith(keyPair)

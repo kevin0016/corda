@@ -237,7 +237,7 @@ object TwoPartyTradeFlow {
             // And add a request for timestamping: it may be that none of the contracts need this! But it can't hurt
             // to have one.
             val currentTime = serviceHub.clock.instant()
-            tx.setTime(currentTime, 30.seconds)
+            tx.addTimeRange(currentTime, 30.seconds)
             return Pair(tx, cashSigningPubKeys)
         }
         // DOCEND 1

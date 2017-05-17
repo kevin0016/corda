@@ -146,7 +146,7 @@ data class TestTransactionDSLInterpreter private constructor(
     }
 
     override fun timeRange(data: TimeRange) {
-        transactionBuilder.setTime(data)
+        transactionBuilder.addTimeRange(data)
     }
 
     override fun tweak(

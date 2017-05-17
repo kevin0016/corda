@@ -259,7 +259,7 @@ class CommercialPaperTestsGeneric {
         val issuance = bigCorpServices.myInfo.legalIdentity.ref(1)
         val issueTX: SignedTransaction =
                 CommercialPaper().generateIssue(issuance, faceValue, TEST_TX_TIME + 30.days, DUMMY_NOTARY).apply {
-                    setTime(TEST_TX_TIME, 30.seconds)
+                    addTimeRange(TEST_TX_TIME, 30.seconds)
                     signWith(bigCorpServices.key)
                     signWith(DUMMY_NOTARY_KEY)
                 }.toSignedTransaction()
@@ -289,7 +289,7 @@ class CommercialPaperTestsGeneric {
         databaseBigCorp.transaction {
             fun makeRedeemTX(time: Instant): Pair<SignedTransaction, UUID> {
                 val ptx = TransactionType.General.Builder(DUMMY_NOTARY)
-                ptx.setTime(time, 30.seconds)
+                ptx.addTimeRange(time, 30.seconds)
                 CommercialPaper().generateRedeem(ptx, moveTX.tx.outRef(1), bigCorpVaultService)
                 ptx.signWith(aliceServices.key)
                 ptx.signWith(bigCorpServices.key)

@@ -179,7 +179,7 @@ fun issueMultiPartyState(nodeA: AbstractNode, nodeB: AbstractNode, notaryNode: A
 
 fun issueInvalidState(node: AbstractNode, notary: Party): StateAndRef<*> {
     val tx = DummyContract.generateInitial(Random().nextInt(), notary, node.info.legalIdentity.ref(0))
-    tx.setTime(Instant.now(), 30.seconds)
+    tx.addTimeRange(Instant.now(), 30.seconds)
     val nodeKey = node.services.legalIdentityKey
     tx.signWith(nodeKey)
     val stx = tx.toSignedTransaction(false)
