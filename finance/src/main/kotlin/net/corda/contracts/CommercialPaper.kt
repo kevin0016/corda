@@ -127,7 +127,7 @@ class CommercialPaper : Contract {
                 val consumedCommands = super.verify(tx, inputs, outputs, commands, groupingKey)
                 commands.requireSingleCommand<Commands.Issue>()
                 val timeRange = tx.timeRange
-                val time = timeRange?.untilTime ?: throw IllegalArgumentException("Issuances must be timestamped")
+                val time = timeRange?.untilTime ?: throw IllegalArgumentException("Issuances must have a time-range (validation window)")
 
                 require(outputs.all { time < it.maturityDate }) { "maturity date is not in the past" }
 

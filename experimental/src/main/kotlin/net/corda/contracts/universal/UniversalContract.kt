@@ -207,7 +207,7 @@ class UniversalContract : Contract {
                 assert(rest is Zero)
 
                 requireThat {
-                    "action must be timestamped" using (tx.timeRange != null)
+                    "action must have a validation window" using (tx.timeRange != null)
                     // "action must be authorized" by (cmd.signers.any { action.actors.any { party -> party.owningKey == it } })
                     // todo perhaps merge these two requirements?
                     "condition must be met" using (eval(tx, action.condition))

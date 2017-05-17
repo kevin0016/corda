@@ -116,8 +116,8 @@ class TransactionDSL<out T : TransactionDSLInterpreter>(val interpreter: T) : Tr
 
     /**
      * Adds a timeRange command to the transaction.
-     * @param time The [Instant] of the [TimestampCommand].
-     * @param tolerance The tolerance of the [TimestampCommand].
+     * @param time The [Instant] of the [TimeRange].
+     * @param tolerance The tolerance of the [TimeRange].
      */
     @JvmOverloads
     fun timeRange(time: Instant, tolerance: Duration = 30.seconds) =

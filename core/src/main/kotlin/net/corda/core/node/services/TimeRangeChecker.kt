@@ -17,7 +17,7 @@ class TimeRangeChecker(val clock: Clock = Clock.systemUTC(),
 
         val now = clock.instant()
 
-        // We don't need to test for (before == null && after == null) or backwards bounds because the TimestampCommand
+        // We don't need to test for (before == null && after == null) or backwards bounds because the TimeRange
         // constructor already checks that.
         if (untilTime != null && untilTime until now > tolerance) return false
         if (fromTime != null && now until fromTime > tolerance) return false
