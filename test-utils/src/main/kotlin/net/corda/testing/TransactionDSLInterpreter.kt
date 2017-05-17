@@ -52,7 +52,7 @@ interface TransactionDSLInterpreter : Verifies, OutputStateLookup {
 
     /**
      * Adds a timeRange to the transaction.
-     * @param data The [TimestampCommand].
+     * @param data The [TimeRange] (validation window).
      */
     fun timeRange(data: TimeRange)
 

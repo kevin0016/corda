@@ -234,8 +234,8 @@ object TwoPartyTradeFlow {
             tx.addOutputState(state, tradeRequest.assetForSale.state.notary)
             tx.addCommand(command, tradeRequest.assetForSale.state.data.owner.owningKey)
 
-            // And add a request for timestamping: it may be that none of the contracts need this! But it can't hurt
-            // to have one.
+            // And add a request for a time-range (validation window): it may be that none of the contracts need this!
+            // But it can't hurt to have one.
             val currentTime = serviceHub.clock.instant()
             tx.addTimeRange(currentTime, 30.seconds)
             return Pair(tx, cashSigningPubKeys)

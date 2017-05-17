@@ -14,7 +14,7 @@ class TimeRangeCheckerTests {
     val timeRangeChecker = TimeRangeChecker(clock, tolerance = 30.seconds)
 
     @Test
-    fun `should return true for valid timestamp`() {
+    fun `should return true for valid time-range`() {
         val now = clock.instant()
         val timeRangePast = TimeRange(now - 60.seconds, now - 29.seconds)
         val timeRangeFuture = TimeRange(now + 29.seconds, now + 60.seconds)
@@ -23,7 +23,7 @@ class TimeRangeCheckerTests {
     }
 
     @Test
-    fun `should return false for invalid timestamp`() {
+    fun `should return false for invalid time-range`() {
         val now = clock.instant()
         val timeRangePast = TimeRange(now - 60.seconds, now - 31.seconds)
         val timeRangeFuture = TimeRange(now + 31.seconds, now + 60.seconds)

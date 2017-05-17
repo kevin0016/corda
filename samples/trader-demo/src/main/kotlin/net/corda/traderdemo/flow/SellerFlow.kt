@@ -4,7 +4,6 @@ import co.paralleluniverse.fibers.Suspendable
 import net.corda.contracts.CommercialPaper
 import net.corda.contracts.asset.DUMMY_CASH_ISSUER
 import net.corda.core.contracts.*
-import net.corda.core.identity.Party
 import net.corda.core.crypto.SecureHash
 import net.corda.core.crypto.generateKeyPair
 import net.corda.core.days
@@ -12,6 +11,7 @@ import net.corda.core.flows.FlowLogic
 import net.corda.core.flows.InitiatingFlow
 import net.corda.core.flows.StartableByRPC
 import net.corda.core.identity.AbstractParty
+import net.corda.core.identity.Party
 import net.corda.core.node.NodeInfo
 import net.corda.core.seconds
 import net.corda.core.transactions.SignedTransaction
@@ -81,13 +81,13 @@ class SellerFlow(val otherParty: Party,
             // Attach the prospectus.
             tx.addAttachment(serviceHub.storageService.attachments.openAttachment(PROSPECTUS_HASH)!!.id)
 
-            // Requesting timestamping, all CP must be timestamped.
+            // Requesting a time-range to be set, all CP must have a validation window.
             tx.addTimeRange(Instant.now(), 30.seconds)
 
             // Sign it as ourselves.
             tx.signWith(keyPair)
 
-            // Get the notary to sign the timestamp
+            // Get the notary to sign the time-range.
             val notarySigs = subFlow(NotaryFlow.Client(tx.toSignedTransaction(false)))
             notarySigs.forEach { tx.addSignatureUnchecked(it) }
 

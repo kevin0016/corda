@@ -458,7 +458,7 @@ class InterestRateSwap : Contract {
                 fixingCalendar, index, indexSource, indexTenor)
     }
 
-    override fun verify(tx: TransactionForContract) = verifyClause(tx, AllOf(Clauses.Timestamped(), Clauses.Group()), tx.commands.select<Commands>())
+    override fun verify(tx: TransactionForContract) = verifyClause(tx, AllOf(Clauses.TimeRanged(), Clauses.Group()), tx.commands.select<Commands>())
 
     interface Clauses {
         /**
@@ -514,7 +514,7 @@ class InterestRateSwap : Contract {
             }
         }
 
-        class Timestamped : Clause<ContractState, Commands, Unit>() {
+        class TimeRanged : Clause<ContractState, Commands, Unit>() {
             override fun verify(tx: TransactionForContract,
                                 inputs: List<ContractState>,
                                 outputs: List<ContractState>,

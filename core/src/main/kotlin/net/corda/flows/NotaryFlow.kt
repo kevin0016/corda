@@ -98,8 +98,8 @@ object NotaryFlow {
                            val uniquenessProvider: UniquenessProvider) : FlowLogic<Void?>() {
         @Suspendable
         override fun call(): Void? {
-            val (id, inputs, timestamp) = receiveAndVerifyTx()
-            validateTimeRange(timestamp)
+            val (id, inputs, timeRange) = receiveAndVerifyTx()
+            validateTimeRange(timeRange)
             commitInputStates(inputs, id)
             signAndSendResponse(id)
             return null
