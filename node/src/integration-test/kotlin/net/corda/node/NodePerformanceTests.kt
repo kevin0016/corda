@@ -18,15 +18,15 @@ import net.corda.node.driver.driver
 import net.corda.node.services.startFlowPermission
 import net.corda.node.services.transactions.SimpleNotaryService
 import net.corda.nodeapi.User
-import net.corda.testing.performance.startReporter
 import net.corda.testing.performance.startPublishingFixedRateInjector
+import net.corda.testing.performance.startReporter
 import net.corda.testing.performance.startTightLoopInjector
 import org.junit.Before
+import org.junit.Ignore
 import org.junit.Test
 import java.lang.management.ManagementFactory
 import java.util.*
 import java.util.concurrent.TimeUnit
-import kotlin.streams.toList
 
 
 fun checkQuasarAgent() {
@@ -35,6 +35,7 @@ fun checkQuasarAgent() {
     }
 }
 
+@Ignore("Run these locally")
 class NodePerformanceTests {
     @StartableByRPC
     class EmptyFlow : FlowLogic<Unit>() {
