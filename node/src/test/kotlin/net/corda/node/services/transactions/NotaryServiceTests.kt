@@ -43,7 +43,7 @@ class NotaryServiceTests {
         net.runNetwork() // Clear network map registration messages
     }
 
-    @Test fun `should sign a unique transaction with a valid timestamp`() {
+    @Test fun `should sign a unique transaction with a valid time-range`() {
         val stx = run {
             val inputState = issueState(clientNode)
             val tx = TransactionType.General.Builder(notaryNode.info.notaryIdentity).withItems(inputState)
@@ -57,7 +57,7 @@ class NotaryServiceTests {
         signatures.forEach { it.verify(stx.id) }
     }
 
-    @Test fun `should sign a unique transaction without a timestamp`() {
+    @Test fun `should sign a unique transaction without a time-range`() {
         val stx = run {
             val inputState = issueState(clientNode)
             val tx = TransactionType.General.Builder(notaryNode.info.notaryIdentity).withItems(inputState)
@@ -70,7 +70,7 @@ class NotaryServiceTests {
         signatures.forEach { it.verify(stx.id) }
     }
 
-    @Test fun `should report error for transaction with an invalid timestamp`() {
+    @Test fun `should report error for transaction with an invalid time-range`() {
         val stx = run {
             val inputState = issueState(clientNode)
             val tx = TransactionType.General.Builder(notaryNode.info.notaryIdentity).withItems(inputState)
@@ -82,7 +82,7 @@ class NotaryServiceTests {
         val future = runNotaryClient(stx)
 
         val ex = assertFailsWith(NotaryException::class) { future.getOrThrow() }
-        assertThat(ex.error).isInstanceOf(NotaryError.TimestampInvalid::class.java)
+        assertThat(ex.error).isInstanceOf(NotaryError.TimeRangeInvalid::class.java)
     }
 
     @Test fun `should sign identical transaction multiple times (signing is idempotent)`() {

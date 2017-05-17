@@ -219,7 +219,7 @@ class PartialMerkleTreeTest {
         }
     }
 
-    private fun makeSimpleCashWtx(notary: Party, timestamp: TimeRange? = null, attachments: List<SecureHash> = emptyList()): WireTransaction {
+    private fun makeSimpleCashWtx(notary: Party, timeRange: TimeRange? = null, attachments: List<SecureHash> = emptyList()): WireTransaction {
         return WireTransaction(
                 inputs = testTx.inputs,
                 attachments = attachments,
@@ -228,7 +228,7 @@ class PartialMerkleTreeTest {
                 notary = notary,
                 signers = listOf(MEGA_CORP_PUBKEY, DUMMY_PUBKEY_1),
                 type = TransactionType.General,
-                timestamp = timestamp
+                timeRange = timeRange
         )
     }
 }

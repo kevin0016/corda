@@ -168,7 +168,7 @@ object BFTSMaRt {
 
         /**
          * Implement logic to execute the command and commit the transaction to the log.
-         * Helper methods are provided for transaction processing: [commitInputStates], [validateTimestamp], and [sign].
+         * Helper methods are provided for transaction processing: [commitInputStates], [validateTimeRange], and [sign].
          */
         abstract fun executeCommand(command: ByteArray): ByteArray?
 
@@ -195,9 +195,9 @@ object BFTSMaRt {
             }
         }
 
-        protected fun validateTimestamp(t: TimeRange?) {
+        protected fun validateTimeRange(t: TimeRange?) {
             if (t != null && !timeRangeChecker.isValid(t))
-                throw NotaryException(NotaryError.TimestampInvalid)
+                throw NotaryException(NotaryError.TimeRangeInvalid)
         }
 
         protected fun sign(bytes: ByteArray): DigitalSignature.WithKey {

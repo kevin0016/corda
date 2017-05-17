@@ -31,8 +31,8 @@ class WireTransaction(
         notary: Party?,
         signers: List<PublicKey>,
         type: TransactionType,
-        timestamp: TimeRange?
-) : BaseTransaction(inputs, outputs, notary, signers, type, timestamp), TraversableTransaction {
+        timeRange: TimeRange?
+) : BaseTransaction(inputs, outputs, notary, signers, type, timeRange), TraversableTransaction {
     init {
         checkInvariants()
     }

@@ -80,7 +80,7 @@ class BFTNonValidatingNotaryService(services: ServiceHubInternal,
                 val id = ftx.rootHash
                 val inputs = ftx.filteredLeaves.inputs
 
-                validateTimestamp(ftx.filteredLeaves.timeRange)
+                validateTimeRange(ftx.filteredLeaves.timeRange)
                 commitInputStates(inputs, id, callerIdentity)
 
                 log.debug { "Inputs committed successfully, signing $id" }

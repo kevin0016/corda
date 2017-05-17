@@ -99,7 +99,7 @@ object NotaryFlow {
         @Suspendable
         override fun call(): Void? {
             val (id, inputs, timestamp) = receiveAndVerifyTx()
-            validateTimestamp(timestamp)
+            validateTimeRange(timestamp)
             commitInputStates(inputs, id)
             signAndSendResponse(id)
             return null
@@ -118,9 +118,9 @@ object NotaryFlow {
             send(otherSide, listOf(signature))
         }
 
-        private fun validateTimestamp(t: TimeRange?) {
+        private fun validateTimeRange(t: TimeRange?) {
             if (t != null && !timeRangeChecker.isValid(t))
-                throw NotaryException(NotaryError.TimestampInvalid)
+                throw NotaryException(NotaryError.TimeRangeInvalid)
         }
 
         /**
@@ -171,7 +171,7 @@ sealed class NotaryError {
     }
 
     /** Thrown if the time specified in the timeRange command is outside the allowed tolerance. */
-    object TimestampInvalid : NotaryError()
+    object TimeRangeInvalid : NotaryError()
 
     data class TransactionInvalid(val msg: String) : NotaryError()
     data class SignaturesInvalid(val msg: String) : NotaryError()
